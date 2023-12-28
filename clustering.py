@@ -1,11 +1,9 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+import plotly.express as px
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score
-
-from sklearn.impute import SimpleImputer
 
 def find_optimal_clusters(data, max_k=10):
     # Standardize the data
@@ -64,33 +62,19 @@ def kmeans_clustering(data, columns, clusters_ideal, num_clusters):
         cluster_members[cluster_label].append(file_name)
 
     # Plot the clusters
-    plt.figure(figsize=(8, 6))
     colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k', 'w', 'orange', 'purple', 'pink', 'lime', 'brown', 'gray', 'indigo']
     markers = ['o', 's', 'D', '^', 'v', '<', '>', 'p', 'H', 'X', '*', '+']
 
-    fig = plt.figure(figsize=(10, 8))
-    ax = fig.add_subplot(111, projection='3d')
 
-    for cluster_id in range(optimal_clusters):
-        cluster_data = data[data['Cluster'] == cluster_id]
-        ax.scatter(
-            cluster_data[columns[0]],
-            cluster_data[columns[1]],
-            cluster_data[columns[2]],
-            c=colors[cluster_id],
-            marker=markers[cluster_id],
-            label=f'Cluster {cluster_id}'
+    fig = px.scatter_3d(
+            data[data['Cluster'] < optimal_clusters],  # Filter data for optimal clusters
+            x=columns[0],
+            y=columns[1],
+            z=columns[2],
+            color='Cluster',
+            labels={'Cluster': 'Cluster'},
+            title='K-Means Clustering'
         )
 
-    ax.set_xlabel(columns[0])
-    ax.set_ylabel(columns[1])
-    ax.set_zlabel(columns[2])
-    ax.set_title('K-Means Clustering')
-    ax.legend()
-    plt.grid(True)
-
-    clusters_pic = ('clusters.png')
-    plt.savefig(clusters_pic, dpi=150)
-
-    return clusters_pic
+    return fig
 

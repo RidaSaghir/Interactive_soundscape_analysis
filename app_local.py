@@ -90,7 +90,7 @@ with gr.Blocks(css=css) as demo:
                 num_clusters = gr.Slider(minimum=1, maximum=10, value=2, step=1,
                                           label="Select the number of clusters", interactive=True, visible=True)
                 cluster_indices = gr.CheckboxGroup(['ACI', 'ENT', 'EVN', 'ECV', 'EAS', 'LFC', 'HFC', 'MFC', 'EPS'], label= 'Choose the parameters for clustering')
-            clusters_pic = gr.outputs.Image(label="Clusters based on k-means", type="pil")
+            clusters_pic = gr.Plot(label="Clusters based on k-means")
             submit_btn_clusters =gr.Button('Plot Clusters', interactive=True)
 
     submit_btn.click(calculate_plot_whole_year, inputs=[radio_x_axis, radio_groupby], outputs=avg_aci_whole)
@@ -100,4 +100,3 @@ with gr.Blocks(css=css) as demo:
 if __name__ == "__main__":
     demo.launch()
     #demo.launch(server_name='0.0.0.0', server_port=7860)
-
