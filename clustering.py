@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score
@@ -67,20 +68,25 @@ def kmeans_clustering(data, columns, clusters_ideal, num_clusters):
     colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k', 'w', 'orange', 'purple', 'pink', 'lime', 'brown', 'gray', 'indigo']
     markers = ['o', 's', 'D', '^', 'v', '<', '>', 'p', 'H', 'X', '*', '+']
 
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111, projection='3d')
+
     for cluster_id in range(optimal_clusters):
         cluster_data = data[data['Cluster'] == cluster_id]
-        plt.scatter(
+        ax.scatter(
             cluster_data[columns[0]],
             cluster_data[columns[1]],
+            cluster_data[columns[2]],
             c=colors[cluster_id],
             marker=markers[cluster_id],
             label=f'Cluster {cluster_id}'
         )
 
-    plt.xlabel(columns[0])
-    plt.ylabel(columns[1])
-    plt.title('K-Means Clustering')
-    plt.legend()
+    ax.set_xlabel(columns[0])
+    ax.set_ylabel(columns[1])
+    ax.set_zlabel(columns[2])
+    ax.set_title('K-Means Clustering')
+    ax.legend()
     plt.grid(True)
 
     clusters_pic = ('clusters.png')
