@@ -65,7 +65,7 @@ with gr.Blocks(css=css) as demo:
                                          label="Select the grouping (hue) for plotting ACI values")
 
                 submit_btn = gr.Button("Plot for the dates")
-                avg_aci_whole = gr.outputs.Image(label="Average ACI over whole timeline", type="pil")
+                avg_aci_whole = gr.Plot(label="Average ACI over whole timeline")
 
     with gr.Tab('Plots according to regions'):
         with gr.Column():

@@ -1,4 +1,5 @@
 import numpy as np
+import plotly.express as px
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -129,174 +130,298 @@ def aci_whole_plot(df, radio_x_axis, radio_groupby):
         df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format = '%Y/%m/%d %H:%M')
         df['Month_x'] = df['Date'].dt.month + df['Date'].dt.day / 31 + df['Date'].dt.hour / 744 # Assuming 31 days in each month
         sns.set(style="whitegrid")
-        plt.figure(figsize=(12, 6))
-        #sns.lmplot(x='Date', y=averages.values, hue='Year', data=averages)
-        sns.lmplot(x='Month_x', y='ACI', hue='Year', data=df, fit_reg=True, scatter_kws={'alpha':0.15})
-        plt.xlabel('Months')
-        plt.ylabel('Average ACI Value')
-        plt.title('Average ACI over whole year')
-        plt.xticks(range(1, 13), calendar.month_abbr[1:13])
-        aci_whole = 'gradio_app.png'
-        plt.savefig(aci_whole, dpi=150)
-        plt.show()
+        # plt.figure(figsize=(12, 6))
+        # sns.lmplot(x='Month_x', y='ACI', hue='Year', data=df, fit_reg=True, scatter_kws={'alpha':0.15})
+        # plt.xlabel('Months')
+        # plt.ylabel('Average ACI Value')
+        # plt.title('Average ACI over whole year')
+        # plt.xticks(range(1, 13), calendar.month_abbr[1:13])
+        # aci_whole = 'gradio_app.png'
+        # plt.savefig(aci_whole, dpi=150)
+        # plt.show()
+
+        fig = px.scatter(df, x='Month_x', y='ACI', color='Year', opacity=0.8, trendline='lowess',
+                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Month_x': False})
+        fig.update_layout(title='Average ACI over whole year', xaxis_title='Months', yaxis_title='Average ACI Value')
+        # Set custom x-axis ticks for months
+        fig.update_xaxes(
+            tickmode='array',
+            tickvals=list(range(1, 13)),
+            ticktext=calendar.month_abbr[1:13],
+            range = [0, 13]
+        )
+        aci_whole = 'plotly_app.png'
+        fig.write_image(aci_whole, width=1200, height=600)
 
     if radio_x_axis == 'year cycle' and radio_groupby == 'Month':
 
         df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format = '%Y/%m/%d %H:%M')
         df['Month_x'] = df['Date'].dt.month + df['Date'].dt.day / 31 + df['Date'].dt.hour / 744 # Assuming 31 days in each month
-        sns.set(style="whitegrid")
-        plt.figure(figsize=(12, 6))
-        #sns.lmplot(x='Date', y=averages.values, hue='Year', data=averages)
-        sns.lmplot(x='Month_x', y='ACI', hue='Month', data=df, fit_reg=True, scatter_kws={'alpha':0.15})
-        plt.xlabel('Months')
-        plt.ylabel('Average ACI Value')
-        plt.title('Average ACI over whole year')
-        plt.xticks(range(1, 13), calendar.month_abbr[1:13])
-        aci_whole = 'gradio_app.png'
-        plt.savefig(aci_whole, dpi=150)
-        plt.show()
+        # sns.set(style="whitegrid")
+        # plt.figure(figsize=(12, 6))
+        # #sns.lmplot(x='Date', y=averages.values, hue='Year', data=averages)
+        # sns.lmplot(x='Month_x', y='ACI', hue='Month', data=df, fit_reg=True, scatter_kws={'alpha':0.15})
+        # plt.xlabel('Months')
+        # plt.ylabel('Average ACI Value')
+        # plt.title('Average ACI over whole year')
+        # plt.xticks(range(1, 13), calendar.month_abbr[1:13])
+        # aci_whole = 'gradio_app.png'
+        # plt.savefig(aci_whole, dpi=150)
+        # plt.show()
+
+        fig = px.scatter(df, x='Month_x', y='ACI', color='Month', opacity=0.8, trendline='lowess',
+                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Month_x': False})
+        fig.update_layout(title='Average ACI over whole year', xaxis_title='Months', yaxis_title='Average ACI Value')
+        # Set custom x-axis ticks for months
+        fig.update_xaxes(
+            tickmode='array',
+            tickvals=list(range(1, 13)),
+            ticktext=calendar.month_abbr[1:13],
+            range = [0, 13]
+        )
+        aci_whole = 'plotly_app.png'
+        fig.write_image(aci_whole, width=1200, height=600)
 
     if radio_x_axis == 'year cycle' and radio_groupby == 'Week':
 
         df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format = '%Y/%m/%d %H:%M')
         df['Month_x'] = df['Date'].dt.month + df['Date'].dt.day / 31  + df['Date'].dt.hour / 744 # Assuming 31 days in each month
-        sns.set(style="whitegrid")
-        plt.figure(figsize=(12, 6))
-        sns.lmplot(x='Month_x', y='ACI', hue='Week', data=df, fit_reg=True, scatter_kws={'alpha':0.15})
-        plt.xlabel('Months')
-        plt.ylabel('Average ACI Value')
-        plt.title('Average ACI over whole year')
-        plt.xticks(range(1, 13), calendar.month_abbr[1:13])
-        aci_whole = 'gradio_app.png'
-        plt.savefig(aci_whole, dpi=150)
-        plt.show()
+        # sns.set(style="whitegrid")
+        # plt.figure(figsize=(12, 6))
+        # sns.lmplot(x='Month_x', y='ACI', hue='Week', data=df, fit_reg=True, scatter_kws={'alpha':0.15})
+        # plt.xlabel('Months')
+        # plt.ylabel('Average ACI Value')
+        # plt.title('Average ACI over whole year')
+        # plt.xticks(range(1, 13), calendar.month_abbr[1:13])
+        # aci_whole = 'gradio_app.png'
+        # plt.savefig(aci_whole, dpi=150)
+        # plt.show()
+        fig = px.scatter(df, x='Month_x', y='ACI', color='Week', opacity=0.8, trendline='lowess',
+                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Month_x': False})
+        fig.update_layout(title='Average ACI over whole year', xaxis_title='Months', yaxis_title='Average ACI Value')
+        # Set custom x-axis ticks for months
+        fig.update_xaxes(
+            tickmode='array',
+            tickvals=list(range(1, 13)),
+            ticktext=calendar.month_abbr[1:13],
+            range = [0, 13]
+        )
+        aci_whole = 'plotly_app.png'
+        fig.write_image(aci_whole, width=1200, height=600)
 
     if radio_x_axis == 'year cycle' and radio_groupby == 'Day':
         df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format='%Y/%m/%d %H:%M')
         df['Month_x'] = df['Date'].dt.month + df['Date'].dt.day / 31  + df['Date'].dt.hour / 744 # Assuming 31 days in each month
-        sns.set(style="whitegrid")
-        plt.figure(figsize=(12, 6))
-        # sns.lmplot(x='Date', y=averages.values, hue='Year', data=averages)
-        sns.lmplot(x='Month_x', y='ACI', hue='Day', data=df, fit_reg=True, scatter_kws={'alpha':0.15})
-        plt.xlabel('Months')
-        plt.ylabel('Average ACI Value')
-        plt.title('Average ACI over whole year')
-        plt.xticks(range(1, 13), calendar.month_abbr[1:13])
-        aci_whole = 'gradio_app.png'
-        plt.savefig(aci_whole, dpi=150)
-        plt.show()
+        # sns.set(style="whitegrid")
+        # plt.figure(figsize=(12, 6))
+        # # sns.lmplot(x='Date', y=averages.values, hue='Year', data=averages)
+        # sns.lmplot(x='Month_x', y='ACI', hue='Day', data=df, fit_reg=True, scatter_kws={'alpha':0.15})
+        # plt.xlabel('Months')
+        # plt.ylabel('Average ACI Value')
+        # plt.title('Average ACI over whole year')
+        # plt.xticks(range(1, 13), calendar.month_abbr[1:13])
+        # aci_whole = 'gradio_app.png'
+        # plt.savefig(aci_whole, dpi=150)
+        # plt.show()
+
+        fig = px.scatter(df, x='Month_x', y='ACI', color='Day', opacity=0.8, trendline='lowess',
+                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Month_x': False})
+        fig.update_layout(title='Average ACI over whole year', xaxis_title='Months', yaxis_title='Average ACI Value')
+        # Set custom x-axis ticks for months
+        fig.update_xaxes(
+            tickmode='array',
+            tickvals=list(range(1, 13)),
+            ticktext=calendar.month_abbr[1:13],
+            range = [0, 13]
+        )
+        aci_whole = 'plotly_app.png'
+        fig.write_image(aci_whole, width=1200, height=600)
 
     if radio_x_axis == 'diel cycle' and radio_groupby == 'Year':
         df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format='%Y/%m/%d %H:%M')
         df['Hour_x'] = df['Date'].dt.hour + df['Date'].dt.minute / 60  # Assuming 60 minutes in each hour
-        sns.set(style="whitegrid")
-        plt.figure(figsize=(12, 6))
-        # sns.lmplot(x='Date', y=averages.values, hue='Year', data=averages)
-        sns.lmplot(x='Hour_x', y='ACI', hue='Year', data=df, fit_reg=True, scatter_kws={'alpha':0.15}, lowess=True)
-        plt.xlabel('Hours')
-        plt.ylabel('Average ACI Value')
-        plt.title('Average ACI over whole day')
-        plt.xticks(range(1, 25))
-        aci_whole = 'gradio_app.png'
-        plt.savefig(aci_whole, dpi=150)
-        plt.show()
+        # sns.set(style="whitegrid")
+        # plt.figure(figsize=(12, 6))
+        # # sns.lmplot(x='Date', y=averages.values, hue='Year', data=averages)
+        # sns.lmplot(x='Hour_x', y='ACI', hue='Year', data=df, fit_reg=True, scatter_kws={'alpha':0.15}, lowess=True)
+        # plt.xlabel('Hours')
+        # plt.ylabel('Average ACI Value')
+        # plt.title('Average ACI over whole day')
+        # plt.xticks(range(1, 25))
+        # aci_whole = 'gradio_app.png'
+        # plt.savefig(aci_whole, dpi=150)
+        # plt.show()
+
+        fig = px.scatter(df, x='Hour_x', y='ACI', color='Year', opacity=0.8, trendline='lowess',
+                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Hour_x': False})
+        fig.update_layout(title='Average ACI over whole day', xaxis_title='Hours', yaxis_title='Average ACI Value')
+        # Set custom x-axis ticks for hours
+        fig.update_xaxes(
+            tickmode='array',
+            tickvals=list(range(1, 25)),
+            range = [1, 24]
+        )
+        aci_whole = 'plotly_app.png'
+        fig.write_image(aci_whole, width=1200, height=600)
 
     if radio_x_axis == 'diel cycle' and radio_groupby == 'Month':
         df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format='%Y/%m/%d %H:%M')
         df['Hour_x'] = df['Date'].dt.hour + df['Date'].dt.minute / 60  # Assuming 60 minutes in each hour
-        sns.set(style="whitegrid")
-        plt.figure(figsize=(12, 6))
-        sns.lmplot(x='Hour_x', y='ACI', hue='Month', data=df, fit_reg=True, scatter_kws={'alpha':0.15}, lowess=True)
-        plt.xlabel('Hours')
-        plt.ylabel('Average ACI Value')
-        plt.title('Average ACI over whole day')
-        plt.xticks(range(1, 25))
-        aci_whole = 'gradio_app.png'
-        plt.savefig(aci_whole, dpi=150)
-        plt.show()
+        # sns.set(style="whitegrid")
+        # plt.figure(figsize=(12, 6))
+        # sns.lmplot(x='Hour_x', y='ACI', hue='Month', data=df, fit_reg=True, scatter_kws={'alpha':0.15}, lowess=True)
+        # plt.xlabel('Hours')
+        # plt.ylabel('Average ACI Value')
+        # plt.title('Average ACI over whole day')
+        # plt.xticks(range(1, 25))
+        # aci_whole = 'gradio_app.png'
+        # plt.savefig(aci_whole, dpi=150)
+        # plt.show()
+
+        fig = px.scatter(df, x='Hour_x', y='ACI', color='Month', opacity=0.8, trendline='lowess',
+                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Hour_x': False})
+        fig.update_layout(title='Average ACI over whole day', xaxis_title='Hours', yaxis_title='Average ACI Value')
+        # Set custom x-axis ticks for hours
+        fig.update_xaxes(
+            tickmode='array',
+            tickvals=list(range(1, 25)),
+            range = [1, 24]
+        )
+        aci_whole = 'plotly_app.png'
+        fig.write_image(aci_whole, width=1200, height=600)
 
     if radio_x_axis == 'diel cycle' and radio_groupby == 'Week':
         df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format='%Y/%m/%d %H:%M')
         df['Hour_x'] = df['Date'].dt.hour + df['Date'].dt.minute / 60  # Assuming 60 minutes in each hour
-        sns.set(style="whitegrid")
-        plt.figure(figsize=(12, 6))
-        # sns.lmplot(x='Date', y=averages.values, hue='Year', data=averages)
-        sns.lmplot(x='Hour_x', y='ACI', hue='Week', data=df, fit_reg=True, scatter_kws={'alpha':0.15}, lowess=True)
-        plt.xlabel('Hours')
-        plt.ylabel('Average ACI Value')
-        plt.title('Average ACI over whole day')
-        plt.xticks(range(1, 25))
-        aci_whole = 'gradio_app.png'
-        plt.savefig(aci_whole, dpi=150)
-        plt.show()
+        # sns.set(style="whitegrid")
+        # plt.figure(figsize=(12, 6))
+        # # sns.lmplot(x='Date', y=averages.values, hue='Year', data=averages)
+        # sns.lmplot(x='Hour_x', y='ACI', hue='Week', data=df, fit_reg=True, scatter_kws={'alpha':0.15}, lowess=True)
+        # plt.xlabel('Hours')
+        # plt.ylabel('Average ACI Value')
+        # plt.title('Average ACI over whole day')
+        # plt.xticks(range(1, 25))
+        # aci_whole = 'gradio_app.png'
+        # plt.savefig(aci_whole, dpi=150)
+        # plt.show()
+        #
+        fig = px.scatter(df, x='Hour_x', y='ACI', color='Week', opacity=0.8, trendline='lowess',
+                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Hour_x': False})
+        fig.update_layout(title='Average ACI over whole day', xaxis_title='Hours', yaxis_title='Average ACI Value')
+        # Set custom x-axis ticks for hours
+        fig.update_xaxes(
+            tickmode='array',
+            tickvals=list(range(1, 25)),
+            range = [1, 24]
+        )
+        aci_whole = 'plotly_app.png'
+        fig.write_image(aci_whole, width=1200, height=600)
 
 
     if radio_x_axis == 'diel cycle' and radio_groupby == 'Day':
         df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format='%Y/%m/%d %H:%M')
         df['Hour_x'] = df['Date'].dt.hour + df['Date'].dt.minute / 60  # Assuming 60 minutes in each hour
-        sns.set(style="whitegrid")
-        plt.figure(figsize=(12, 6))
-        # sns.lmplot(x='Date', y=averages.values, hue='Year', data=averages)
-        sns.lmplot(x='Hour_x', y='ACI', hue='Day', data=df, scatter_kws={'alpha':0.15}, lowess=True, fit_reg=True)
-        plt.xlabel('Hours')
-        plt.ylabel('Average ACI Value')
-        plt.title('Average ACI over whole day')
-        plt.xticks(range(1, 25))
-        aci_whole = 'gradio_app.png'
-        plt.savefig(aci_whole, dpi=150)
-        plt.show()
+        # sns.set(style="whitegrid")
+        # plt.figure(figsize=(12, 6))
+        # # sns.lmplot(x='Date', y=averages.values, hue='Year', data=averages)
+        # sns.lmplot(x='Hour_x', y='ACI', hue='Day', data=df, scatter_kws={'alpha':0.15}, lowess=True, fit_reg=True)
+        # plt.xlabel('Hours')
+        # plt.ylabel('Average ACI Value')
+        # plt.title('Average ACI over whole day')
+        # plt.xticks(range(1, 25))
+        # aci_whole = 'gradio_app.png'
+        # plt.savefig(aci_whole, dpi=150)
+        # plt.show()
+
+        fig = px.scatter(df, x='Hour_x', y='ACI', color='Day', opacity=0.8, trendline='lowess',
+                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Hour_x': False})
+        fig.update_layout(title='Average ACI over whole day', xaxis_title='Hours', yaxis_title='Average ACI Value')
+        # Set custom x-axis ticks for hours
+        fig.update_xaxes(
+            tickmode='array',
+            tickvals=list(range(1, 25)),
+            range = [1, 24]
+        )
+        aci_whole = 'plotly_app.png'
+        fig.write_image(aci_whole, width=1200, height=600)
 
     if radio_x_axis == 'linear' and radio_groupby == 'Year':
         df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format='%Y/%m/%d %H:%M')
         df[('Year_x')] = df['Year'] + df['Date'].dt.month / 12 + df['Date'].dt.day / 365  + df['Date'].dt.hour / 8760 # Assuming 31 days in each month
-        sns.set(style="whitegrid")
-        plt.figure(figsize=(12, 6))
-        sns.lmplot(x='Year_x', y='ACI', hue='Year', data=df, fit_reg=True, scatter_kws={'alpha':0.15}, lowess=True)
-        plt.xlabel('Months')
-        plt.ylabel('Average ACI Value')
-        plt.title('Average ACI over whole year')
-        aci_whole = 'gradio_app.png'
-        plt.savefig(aci_whole, dpi=150)
-        plt.show()
+        # sns.set(style="whitegrid")
+        # plt.figure(figsize=(12, 6))
+        # sns.lmplot(x='Year_x', y='ACI', hue='Year', data=df, fit_reg=True, scatter_kws={'alpha':0.15}, lowess=True)
+        # plt.xlabel('Months')
+        # plt.ylabel('Average ACI Value')
+        # plt.title('Average ACI over whole year')
+        # aci_whole = 'gradio_app.png'
+        # plt.savefig(aci_whole, dpi=150)
+        # plt.show()
+
+        fig = px.scatter(df, x='Year_x', y='ACI', color='Year', opacity=0.8, trendline='lowess',
+                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Year_x': False})
+        fig.update_layout(title='Average ACI', xaxis_title='Linear', yaxis_title='Average ACI Value')
+        aci_whole = 'plotly_app.png'
+        fig.write_image(aci_whole, width=1200, height=600)
+
 
     if radio_x_axis == 'linear' and radio_groupby == 'Month':
         df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format='%Y/%m/%d %H:%M')
         df[('Year_x')] = df['Year'] + df['Date'].dt.month / 12 + df['Date'].dt.day / 365  + df['Date'].dt.hour / 8760 # Assuming 31 days in each month
-        sns.set(style="whitegrid")
-        plt.figure(figsize=(12, 6))
-        sns.lmplot(x='Year_x', y='ACI', hue='Month', data=df, fit_reg=True, scatter_kws={'alpha':0.15}, lowess=True)
-        plt.xlabel('Months')
-        plt.ylabel('Average ACI Value')
-        plt.title('Average ACI over whole year')
-        aci_whole = 'gradio_app.png'
-        plt.savefig(aci_whole, dpi=150)
-        plt.show()
+        # sns.set(style="whitegrid")
+        # plt.figure(figsize=(12, 6))
+        # sns.lmplot(x='Year_x', y='ACI', hue='Month', data=df, fit_reg=True, scatter_kws={'alpha':0.15}, lowess=True)
+        # plt.xlabel('Months')
+        # plt.ylabel('Average ACI Value')
+        # plt.title('Average ACI over whole year')
+        # aci_whole = 'gradio_app.png'
+        # plt.savefig(aci_whole, dpi=150)
+        # plt.show()
+
+        fig = px.scatter(df, x='Year_x', y='ACI', color='Month', opacity=0.8, trendline='lowess',
+                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Year_x': False})
+        fig.update_layout(title='Average ACI', xaxis_title='Linear', yaxis_title='Average ACI Value')
+        aci_whole = 'plotly_app.png'
+        fig.write_image(aci_whole, width=1200, height=600)
 
     if radio_x_axis == 'linear' and radio_groupby == 'Week':
         df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format='%Y/%m/%d %H:%M')
         df[('Year_x')] = df['Year'] + df['Date'].dt.month / 12 + df['Date'].dt.day / 365 + df[
             'Date'].dt.hour / 8760  # Assuming 31 days in each month
-        sns.set(style="whitegrid")
-        plt.figure(figsize=(12, 6))
-        sns.lmplot(x='Year_x', y='ACI', hue='Week', data=df, fit_reg=True, scatter_kws={'alpha': 0.15}, lowess=True)
-        plt.xlabel('Months')
-        plt.ylabel('Average ACI Value')
-        plt.title('Average ACI over whole year')
-        aci_whole = 'gradio_app.png'
-        plt.savefig(aci_whole, dpi=150)
-        plt.show()
+        # sns.set(style="whitegrid")
+        # plt.figure(figsize=(12, 6))
+        # sns.lmplot(x='Year_x', y='ACI', hue='Week', data=df, fit_reg=True, scatter_kws={'alpha': 0.15}, lowess=True)
+        # plt.xlabel('Months')
+        # plt.ylabel('Average ACI Value')
+        # plt.title('Average ACI over whole year')
+        # aci_whole = 'gradio_app.png'
+        # plt.savefig(aci_whole, dpi=150)
+        # plt.show()
+
+        fig = px.scatter(df, x='Year_x', y='ACI', color='Week', opacity=0.8, trendline='lowess',
+                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Year_x': False})
+        fig.update_layout(title='Average ACI', xaxis_title='Linear', yaxis_title='Average ACI Value')
+        aci_whole = 'plotly_app.png'
+        fig.write_image(aci_whole, width=1200, height=600)
 
     if radio_x_axis == 'linear' and radio_groupby == 'Day':
         df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format='%Y/%m/%d %H:%M')
         df[('Year_x')] = df['Year'] + df['Date'].dt.month / 12 + df['Date'].dt.day / 365 + df[
             'Date'].dt.hour / 8760  # Assuming 31 days in each month
-        sns.set(style="whitegrid")
-        plt.figure(figsize=(12, 6))
-        sns.lmplot(x='Year_x', y='ACI', hue='Day', data=df, fit_reg=True, scatter_kws={'alpha': 0.15}, lowess=True)
-        plt.xlabel('Months')
-        plt.ylabel('Average ACI Value')
-        plt.title('Average ACI over whole year')
-        aci_whole = 'gradio_app.png'
-        plt.savefig(aci_whole, dpi=150)
-        plt.show()
-    return aci_whole
+        # sns.set(style="whitegrid")
+        # plt.figure(figsize=(12, 6))
+        # sns.lmplot(x='Year_x', y='ACI', hue='Day', data=df, fit_reg=True, scatter_kws={'alpha': 0.15}, lowess=True)
+        # plt.xlabel('Months')
+        # plt.ylabel('Average ACI Value')
+        # plt.title('Average ACI over whole year')
+        # aci_whole = 'gradio_app.png'
+        # plt.savefig(aci_whole, dpi=150)
+        # plt.show()
+
+        fig = px.scatter(df, x='Year_x', y='ACI', color='Day', opacity=0.8, trendline='lowess',
+                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Year_x': False})
+        fig.update_layout(title='Average ACI', xaxis_title='Linear', yaxis_title='Average ACI Value')
+        aci_whole = 'plotly_app.png'
+        fig.write_image(aci_whole, width=1200, height=600)
+
+    return fig
