@@ -58,14 +58,24 @@ with gr.Blocks(css=css) as demo:
             #dates = gr.CheckboxGroup(label="Data from following dates were found. Select dates to analyse", choices=detect_datasets())
 
         with gr.Column():
-            with gr.Column():
+            with gr.Row():
+                index_select = gr.Dropdown(
+            ["ACI (Acoustic Complexity Index)", "ENT (Temporal Entropy Index)", "CVR LF (Acoustic Cover Index - Low Freq)",
+             "CVR MF (Acoustic Cover Index - Mid Freq)", "CVR HF (Acoustic Cover Index - High Freq)",
+             "EVN (Event Count Index)"],
+                    label="Acoustic Indices", info="Will add more indices later!"
+        )
+                resolution = gr.Radio(["Monthly", "Weekly", "Daily", "Hourly", "Minutes"],
+                                        label="Select the resolution for plotting the values")
+            with gr.Row():
                 radio_x_axis = gr.Radio(["year cycle", "diel cycle", "linear"],
-                                        label="Select the range for x axis for plotting ACI values")
+                                        label="Select the range for x axis for plotting the values")
                 radio_groupby = gr.Radio(["Year", "Month", "Week", "Day"],
-                                         label="Select the grouping (hue) for plotting ACI values")
-
-                submit_btn = gr.Button("Plot for the dates")
-                avg_aci_whole = gr.Plot(label="Average ACI over whole timeline")
+                                         label="Select the grouping (hue) for plotting the values")
+            with gr.Row():
+                with gr.Column():
+                    submit_btn = gr.Button("Plot for the dates")
+                    avg_aci_whole = gr.Plot(label="Average ACI over whole timeline")
 
     with gr.Tab('Plots according to regions'):
         with gr.Column():
