@@ -15,8 +15,8 @@ unique_years = df['Year'].astype(str).str.zfill(2) + '/' + df['Month'].astype(st
     'Day'].astype(str).str.zfill(2)
 unique_years = unique_years.drop_duplicates().tolist()
 # unique_years = df['Year'].unique()
-def calculate_plot_whole_year(radio_x_axis, radio_groupby):
-    avg_aci_whole = aci_whole_plot(df, radio_x_axis, radio_groupby)
+def calculate_plot_whole_year(radio_x_axis, radio_groupby, index_select):
+    avg_aci_whole = aci_whole_plot(df, radio_x_axis, radio_groupby, index_select)
     return avg_aci_whole
 
 def call_plot_aci_values_regions(plot, hue, region_type):
@@ -103,7 +103,7 @@ with gr.Blocks(css=css) as demo:
             clusters_pic = gr.Plot(label="Clusters based on k-means")
             submit_btn_clusters =gr.Button('Plot Clusters', interactive=True)
 
-    submit_btn.click(calculate_plot_whole_year, inputs=[radio_x_axis, radio_groupby], outputs=avg_aci_whole)
+    submit_btn.click(calculate_plot_whole_year, inputs=[radio_x_axis, radio_groupby, index_select], outputs=avg_aci_whole)
     submit_btn_2.click(call_plot_aci_values_regions, [plot, hue, region_type], acoustic_region_plot)
     submit_btn_clusters.click(clustering, [clusters_ideal, num_clusters, cluster_indices], clusters_pic)
 
