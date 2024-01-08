@@ -118,7 +118,7 @@ def plot_aci_values_regions(df, plot, hue, region_type):
     return region_wise
 
 
-def aci_whole_plot(df, radio_x_axis, radio_groupby, y_variable):
+def aci_whole_plot(df, radio_x_axis, radio_groupby, y_variable, resolution):
     if y_variable == 'ACI (Acoustic Complexity Index)':
         y_var = 'ACI'
     elif y_variable == 'ENT (Temporal Entropy Index)':
@@ -132,172 +132,215 @@ def aci_whole_plot(df, radio_x_axis, radio_groupby, y_variable):
     elif y_variable == 'EVN (Event Count Index)':
         y_var = 'EVN'
 
-    if radio_x_axis == 'year cycle' and radio_groupby == 'Year':
+    df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format = '%Y/%m/%d %H:%M')
 
-        df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format = '%Y/%m/%d %H:%M')
-        df['Month_x'] = df['Date'].dt.month + df['Date'].dt.day / 31 + df['Date'].dt.hour / 744 # Assuming 31 days in each month
-        sns.set(style="whitegrid")
-        fig = px.scatter(df, x='Month_x', y=y_var, color='Year', opacity=0.8, trendline='lowess',
-                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Month_x': False})
-        fig.update_layout(title='Average ACI over whole year', xaxis_title='Months', yaxis_title='Average ACI Value')
-        # Set custom x-axis ticks for months
-        fig.update_xaxes(
-            tickmode='array',
-            tickvals=list(range(1, 13)),
-            ticktext=calendar.month_abbr[1:13],
-            range = [0, 13]
-        )
-        aci_whole = 'plotly_app.png'
-        fig.write_image(aci_whole, width=1200, height=600)
+    if radio_x_axis == 'year cycle':
+        resolution_mapping = {
+            'Monthly': lambda x: x['Date'].dt.month,
+            'Weekly': lambda x: x['Date'].dt.month + x['Date'].dt.isocalendar().week / 4,
+            'Daily': lambda x: x['Date'].dt.month + x['Date'].dt.isocalendar().week / 4 + x['Date'].dt.day / 31,
+            'Hourly': lambda x: x['Date'].dt.month + x['Date'].dt.isocalendar().week / 4 + x['Date'].dt.day / 31 + x['Date'].dt.hour / 744,
+            'Minutes': lambda x: x['Date'].dt.month + x['Date'].dt.isocalendar().week / 4 + x['Date'].dt.day / 31 + x['Date'].dt.hour / 744 + x[
+                'Date'].dt.minute / 44640
+        }
 
-    if radio_x_axis == 'year cycle' and radio_groupby == 'Month':
+        if radio_groupby == 'Year':
+            df['Month_x'] = resolution_mapping.get(resolution)(df)
+            sns.set(style="whitegrid")
+            fig = px.scatter(df, x='Month_x', y=y_var, color='Year', opacity=0.8, trendline='lowess',
+                             hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Month_x': False})
+            fig.update_layout(title='Average ACI over whole year', xaxis_title='Months', yaxis_title='Average ACI Value')
+            # Set custom x-axis ticks for months
+            fig.update_xaxes(
+                tickmode='array',
+                tickvals=list(range(1, 13)),
+                ticktext=calendar.month_abbr[1:13],
+                range = [0, 13]
+            )
+            aci_whole = 'plotly_app.png'
+            fig.write_image(aci_whole, width=1200, height=600)
 
-        df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format = '%Y/%m/%d %H:%M')
-        df['Month_x'] = df['Date'].dt.month + df['Date'].dt.day / 31 + df['Date'].dt.hour / 744 # Assuming 31 days in each month
-        fig = px.scatter(df, x='Month_x', y=y_var, color='Month', opacity=0.8, trendline='lowess',
-                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Month_x': False})
-        fig.update_layout(title='Average ACI over whole year', xaxis_title='Months', yaxis_title='Average ACI Value')
-        # Set custom x-axis ticks for months
-        fig.update_xaxes(
-            tickmode='array',
-            tickvals=list(range(1, 13)),
-            ticktext=calendar.month_abbr[1:13],
-            range = [0, 13]
-        )
-        aci_whole = 'plotly_app.png'
-        fig.write_image(aci_whole, width=1200, height=600)
+        if radio_groupby == 'Month':
 
-    if radio_x_axis == 'year cycle' and radio_groupby == 'Week':
+            df['Month_x'] = resolution_mapping.get(resolution)(df)
+            fig = px.scatter(df, x='Month_x', y=y_var, color='Month', opacity=0.8, trendline='lowess',
+                             hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Month_x': False})
+            fig.update_layout(title='Average ACI over whole year', xaxis_title='Months', yaxis_title='Average ACI Value')
+            # Set custom x-axis ticks for months
+            fig.update_xaxes(
+                tickmode='array',
+                tickvals=list(range(1, 13)),
+                ticktext=calendar.month_abbr[1:13],
+                range = [0, 13]
+            )
+            aci_whole = 'plotly_app.png'
+            fig.write_image(aci_whole, width=1200, height=600)
 
-        df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format = '%Y/%m/%d %H:%M')
-        df['Month_x'] = df['Date'].dt.month + df['Date'].dt.day / 31  + df['Date'].dt.hour / 744 # Assuming 31 days in each month
-        fig = px.scatter(df, x='Month_x', y=y_var, color='Week', opacity=0.8, trendline='lowess',
-                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Month_x': False})
-        fig.update_layout(title='Average ACI over whole year', xaxis_title='Months', yaxis_title='Average ACI Value')
-        # Set custom x-axis ticks for months
-        fig.update_xaxes(
-            tickmode='array',
-            tickvals=list(range(1, 13)),
-            ticktext=calendar.month_abbr[1:13],
-            range = [0, 13]
-        )
-        aci_whole = 'plotly_app.png'
-        fig.write_image(aci_whole, width=1200, height=600)
+        if radio_groupby == 'Week':
 
-    if radio_x_axis == 'year cycle' and radio_groupby == 'Day':
-        df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format='%Y/%m/%d %H:%M')
-        df['Month_x'] = df['Date'].dt.month + df['Date'].dt.day / 31  + df['Date'].dt.hour / 744 # Assuming 31 days in each month
-        fig = px.scatter(df, x='Month_x', y=y_var, color='Day', opacity=0.8, trendline='lowess',
-                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Month_x': False})
-        fig.update_layout(title='Average ACI over whole year', xaxis_title='Months', yaxis_title='Average ACI Value')
-        # Set custom x-axis ticks for months
-        fig.update_xaxes(
-            tickmode='array',
-            tickvals=list(range(1, 13)),
-            ticktext=calendar.month_abbr[1:13],
-            range = [0, 13]
-        )
-        aci_whole = 'plotly_app.png'
-        fig.write_image(aci_whole, width=1200, height=600)
+            df['Month_x'] = resolution_mapping.get(resolution)(df)
+            fig = px.scatter(df, x='Month_x', y=y_var, color='Week', opacity=0.8, trendline='lowess',
+                             hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Month_x': False})
+            fig.update_layout(title='Average ACI over whole year', xaxis_title='Months', yaxis_title='Average ACI Value')
+            # Set custom x-axis ticks for months
+            fig.update_xaxes(
+                tickmode='array',
+                tickvals=list(range(1, 13)),
+                ticktext=calendar.month_abbr[1:13],
+                range = [0, 13]
+            )
+            aci_whole = 'plotly_app.png'
+            fig.write_image(aci_whole, width=1200, height=600)
 
-    if radio_x_axis == 'diel cycle' and radio_groupby == 'Year':
-        df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format='%Y/%m/%d %H:%M')
-        df['Hour_x'] = df['Date'].dt.hour + df['Date'].dt.minute / 60  # Assuming 60 minutes in each hour
-        fig = px.scatter(df, x='Hour_x', y=y_var, color='Year', opacity=0.8, trendline='lowess',
-                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Hour_x': False})
-        fig.update_layout(title='Average ACI over whole day', xaxis_title='Hours', yaxis_title='Average ACI Value')
-        # Set custom x-axis ticks for hours
-        fig.update_xaxes(
-            tickmode='array',
-            tickvals=list(range(1, 25)),
-            range = [1, 24]
-        )
-        aci_whole = 'plotly_app.png'
-        fig.write_image(aci_whole, width=1200, height=600)
+        if radio_groupby == 'Day':
+            df['Month_x'] = resolution_mapping.get(resolution)(df)
+            fig = px.scatter(df, x='Month_x', y=y_var, color='Day', opacity=0.8, trendline='lowess',
+                             hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Month_x': False})
+            fig.update_layout(title='Average ACI over whole year', xaxis_title='Months', yaxis_title='Average ACI Value')
+            # Set custom x-axis ticks for months
+            fig.update_xaxes(
+                tickmode='array',
+                tickvals=list(range(1, 13)),
+                ticktext=calendar.month_abbr[1:13],
+                range = [0, 13]
+            )
+            aci_whole = 'plotly_app.png'
+            fig.write_image(aci_whole, width=1200, height=600)
 
-    if radio_x_axis == 'diel cycle' and radio_groupby == 'Month':
-        df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format='%Y/%m/%d %H:%M')
-        df['Hour_x'] = df['Date'].dt.hour + df['Date'].dt.minute / 60  # Assuming 60 minutes in each hour
-        fig = px.scatter(df, x='Hour_x', y=y_var, color='Month', opacity=0.8, trendline='lowess',
-                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Hour_x': False})
-        fig.update_layout(title='Average ACI over whole day', xaxis_title='Hours', yaxis_title='Average ACI Value')
-        # Set custom x-axis ticks for hours
-        fig.update_xaxes(
-            tickmode='array',
-            tickvals=list(range(1, 25)),
-            range = [1, 24]
-        )
-        aci_whole = 'plotly_app.png'
-        fig.write_image(aci_whole, width=1200, height=600)
+    if radio_x_axis == 'diel cycle':
+        resolution_mapping = {
+            'Hourly': lambda x: x['Date'].dt.hour,
+            'Minutes': lambda x: x['Date'].dt.hour + x['Date'].dt.minute / 60 #60 minutes in an hour
+        }
 
-    if radio_x_axis == 'diel cycle' and radio_groupby == 'Week':
-        df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format='%Y/%m/%d %H:%M')
-        df['Hour_x'] = df['Date'].dt.hour + df['Date'].dt.minute / 60  # Assuming 60 minutes in each hour
-        fig = px.scatter(df, x='Hour_x', y=y_var, color='Week', opacity=0.8, trendline='lowess',
-                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Hour_x': False})
-        fig.update_layout(title='Average ACI over whole day', xaxis_title='Hours', yaxis_title='Average ACI Value')
-        # Set custom x-axis ticks for hours
-        fig.update_xaxes(
-            tickmode='array',
-            tickvals=list(range(1, 25)),
-            range = [1, 24]
-        )
-        aci_whole = 'plotly_app.png'
-        fig.write_image(aci_whole, width=1200, height=600)
+        if radio_groupby == 'Year':
+            df['Hour_x'] = resolution_mapping.get(resolution)(df)
+            fig = px.scatter(df, x='Hour_x', y=y_var, color='Year', opacity=0.8, trendline='lowess',
+                             hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Hour_x': False})
+            fig.update_layout(title='Average ACI over whole day', xaxis_title='Hours', yaxis_title='Average ACI Value')
+            # Set custom x-axis ticks for hours
+            fig.update_xaxes(
+                tickmode='array',
+                tickvals=list(range(1, 25)),
+                range = [1, 24]
+            )
+            aci_whole = 'plotly_app.png'
+            fig.write_image(aci_whole, width=1200, height=600)
 
+        if radio_groupby == 'Month':
+            df['Hour_x'] = resolution_mapping.get(resolution)(df)
+            fig = px.scatter(df, x='Hour_x', y=y_var, color='Month', opacity=0.8, trendline='lowess',
+                             hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Hour_x': False})
+            fig.update_layout(title='Average ACI over whole day', xaxis_title='Hours', yaxis_title='Average ACI Value')
+            # Set custom x-axis ticks for hours
+            fig.update_xaxes(
+                tickmode='array',
+                tickvals=list(range(1, 25)),
+                range = [1, 24]
+            )
+            aci_whole = 'plotly_app.png'
+            fig.write_image(aci_whole, width=1200, height=600)
 
-    if radio_x_axis == 'diel cycle' and radio_groupby == 'Day':
-        df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format='%Y/%m/%d %H:%M')
-        df['Hour_x'] = df['Date'].dt.hour + df['Date'].dt.minute / 60  # Assuming 60 minutes in each hour
-        fig = px.scatter(df, x='Hour_x', y=y_var, color='Day', opacity=0.8, trendline='lowess',
-                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Hour_x': False})
-        fig.update_layout(title='Average ACI over whole day', xaxis_title='Hours', yaxis_title='Average ACI Value')
-        # Set custom x-axis ticks for hours
-        fig.update_xaxes(
-            tickmode='array',
-            tickvals=list(range(1, 25)),
-            range = [1, 24]
-        )
-        aci_whole = 'plotly_app.png'
-        fig.write_image(aci_whole, width=1200, height=600)
-
-    if radio_x_axis == 'linear' and radio_groupby == 'Year':
-        df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format='%Y/%m/%d %H:%M')
-        df[('Year_x')] = df['Year'] + df['Date'].dt.month / 12 + df['Date'].dt.day / 365  + df['Date'].dt.hour / 8760 # Assuming 31 days in each month
-        fig = px.scatter(df, x='Year_x', y=y_var, color='Year', opacity=0.8, trendline='lowess',
-                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Year_x': False})
-        fig.update_layout(title='Average ACI', xaxis_title='Linear', yaxis_title='Average ACI Value')
-        aci_whole = 'plotly_app.png'
-        fig.write_image(aci_whole, width=1200, height=600)
+        if radio_groupby == 'Week':
+            df['Hour_x'] = resolution_mapping.get(resolution)(df)
+            fig = px.scatter(df, x='Hour_x', y=y_var, color='Week', opacity=0.8, trendline='lowess',
+                             hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Hour_x': False})
+            fig.update_layout(title='Average ACI over whole day', xaxis_title='Hours', yaxis_title='Average ACI Value')
+            # Set custom x-axis ticks for hours
+            fig.update_xaxes(
+                tickmode='array',
+                tickvals=list(range(1, 25)),
+                range = [1, 24]
+            )
+            aci_whole = 'plotly_app.png'
+            fig.write_image(aci_whole, width=1200, height=600)
 
 
-    if radio_x_axis == 'linear' and radio_groupby == 'Month':
-        df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format='%Y/%m/%d %H:%M')
-        df[('Year_x')] = df['Year'] + df['Date'].dt.month / 12 + df['Date'].dt.day / 365  + df['Date'].dt.hour / 8760 # Assuming 31 days in each month
-        fig = px.scatter(df, x='Year_x', y=y_var, color='Month', opacity=0.8, trendline='lowess',
-                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Year_x': False})
-        fig.update_layout(title='Average ACI', xaxis_title='Linear', yaxis_title='Average ACI Value')
-        aci_whole = 'plotly_app.png'
-        fig.write_image(aci_whole, width=1200, height=600)
+        if radio_groupby == 'Day':
+            df['Hour_x'] = resolution_mapping.get(resolution)(df)
+            fig = px.scatter(df, x='Hour_x', y=y_var, color='Day', opacity=0.8, trendline='lowess',
+                             hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Hour_x': False})
+            fig.update_layout(title='Average ACI over whole day', xaxis_title='Hours', yaxis_title='Average ACI Value')
+            # Set custom x-axis ticks for hours
+            fig.update_xaxes(
+                tickmode='array',
+                tickvals=list(range(1, 25)),
+                range = [1, 24]
+            )
+            aci_whole = 'plotly_app.png'
+            fig.write_image(aci_whole, width=1200, height=600)
 
-    if radio_x_axis == 'linear' and radio_groupby == 'Week':
-        df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format='%Y/%m/%d %H:%M')
-        df[('Year_x')] = df['Year'] + df['Date'].dt.month / 12 + df['Date'].dt.day / 365 + df[
-            'Date'].dt.hour / 8760  # Assuming 31 days in each month
-        fig = px.scatter(df, x='Year_x', y=y_var, color='Week', opacity=0.8, trendline='lowess',
-                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Year_x': False})
-        fig.update_layout(title='Average ACI', xaxis_title='Linear', yaxis_title='Average ACI Value')
-        aci_whole = 'plotly_app.png'
-        fig.write_image(aci_whole, width=1200, height=600)
+    if radio_x_axis == 'linear':
+        if df['Year'].nunique() > 1:
+            resolution_mapping = {
+                'Yearly': lambda x: x['Date'].dt.year,
+                'Monthly': lambda x: x['Date'].dt.year + x['Date'].dt.month / 12,
+                'Weekly': lambda x: x['Date'].dt.year + x['Date'].dt.month / 12 + x['Date'].dt.isocalendar().week / 52,
+                'Daily': lambda x: x['Date'].dt.year + x['Date'].dt.month / 12 + x['Date'].dt.isocalendar().week / 52 + x['Date'].dt.day / 365,
+                'Hourly': lambda x: x['Date'].dt.year + x['Date'].dt.month / 12 + x['Date'].dt.isocalendar().week / 52 + x['Date'].dt.day / 365 + x['Date'].dt.hour / 8760,
+                'Minutes': lambda x: x['Date'].dt.year + x['Date'].dt.month / 12 + x['Date'].dt.isocalendar().week / 52 + x['Date'].dt.day / 365
+                                     + x['Date'].dt.hour / 8760 + x['Date'].dt.minutes / 525600,
+            }
+        elif df['Month'].nunique() > 1:
+            resolution_mapping = {
+                'Monthly': lambda x: x['Date'].dt.month,
+                'Weekly': lambda x: x['Date'].dt.month + x['Date'].dt.isocalendar().week / 4,
+                'Daily': lambda x: x['Date'].dt.month + x['Date'].dt.isocalendar().week / 4 + x['Date'].dt.day / 31,
+                'Hourly': lambda x: x['Date'].dt.month + x['Date'].dt.isocalendar().week / 4 + x['Date'].dt.day / 31 + x['Date'].dt.hour / 744,
+                'Minutes': lambda x: x['Date'].dt.month + x['Date'].dt.isocalendar().week / 4 + x['Date'].dt.day / 31 + x['Date'].dt.hour / 744 + x[
+                    'Date'].dt.minute / 44640
+            }
+        elif df['Week'].nunique() > 1:
+            resolution_mapping = {
+                'Monthly': lambda x: x['Date'].dt.isocalendar().week,
+                'Weekly': lambda x: x['Date'].dt.isocalendar().week,
+                'Daily': lambda x: x['Date'].dt.isocalendar().week + x['Date'].dt.day / 7,
+                'Hourly': lambda x: x['Date'].dt.isocalendar().week + x['Date'].dt.day / 7 + x['Date'].dt.hour / 168,
+                'Minutes': lambda x: x['Date'].dt.isocalendar().week + x['Date'].dt.day / 7 + x['Date'].dt.hour / 168 + x[
+                    'Date'].dt.minute / 10080
+            }
+        elif df['Day'].nunique() > 1:
+            resolution_mapping = {
+                'Monthly': lambda x: x['Date'].dt.day,
+                'Weekly': lambda x: x['Date'].dt.day,
+                'Daily': lambda x: x['Date'].dt.day,
+                'Hourly': lambda x: x['Date'].dt.day + x['Date'].dt.hour / 24,
+                'Minutes': lambda x: x['Date'].dt.day + x['Date'].dt.hour / 24 + x[
+                    'Date'].dt.minute / 1440
+            }
 
-    if radio_x_axis == 'linear' and radio_groupby == 'Day':
-        df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format='%Y/%m/%d %H:%M')
-        df[('Year_x')] = df['Year'] + df['Date'].dt.month / 12 + df['Date'].dt.day / 365 + df[
-            'Date'].dt.hour / 8760  # Assuming 31 days in each month
-        fig = px.scatter(df, x='Year_x', y=y_var, color='Day', opacity=0.8, trendline='lowess',
-                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Year_x': False})
-        fig.update_layout(title='Average ACI', xaxis_title='Linear', yaxis_title='Average ACI Value')
-        aci_whole = 'plotly_app.png'
-        fig.write_image(aci_whole, width=1200, height=600)
+
+        if radio_groupby == 'Year':
+            df['Year_x'] = resolution_mapping.get(resolution)(df)
+            fig = px.scatter(df, x='Year_x', y=y_var, color='Year', opacity=0.8, trendline='lowess',
+                             hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Year_x': False})
+            fig.update_layout(title='Average ACI', xaxis_title='Linear', yaxis_title='Average ACI Value')
+            aci_whole = 'plotly_app.png'
+            fig.write_image(aci_whole, width=1200, height=600)
+
+
+        if radio_groupby == 'Month':
+            df['Year_x'] = resolution_mapping.get(resolution)(df)
+            fig = px.scatter(df, x='Year_x', y=y_var, color='Month', opacity=0.8, trendline='lowess',
+                             hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Year_x': False})
+            fig.update_layout(title='Average ACI', xaxis_title='Linear', yaxis_title='Average ACI Value')
+            aci_whole = 'plotly_app.png'
+            fig.write_image(aci_whole, width=1200, height=600)
+
+        if radio_groupby == 'Week':
+            df['Year_x'] = resolution_mapping.get(resolution)(df)
+            fig = px.scatter(df, x='Year_x', y=y_var, color='Week', opacity=0.8, trendline='lowess',
+                             hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Year_x': False})
+            fig.update_layout(title='Average ACI', xaxis_title='Linear', yaxis_title='Average ACI Value')
+            aci_whole = 'plotly_app.png'
+            fig.write_image(aci_whole, width=1200, height=600)
+
+        if radio_groupby == 'Day':
+            df['Year_x'] = resolution_mapping.get(resolution)(df)
+            fig = px.scatter(df, x='Year_x', y=y_var, color='Day', opacity=0.8, trendline='lowess',
+                             hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Year_x': False})
+            fig.update_layout(title='Average ACI', xaxis_title='Linear', yaxis_title='Average ACI Value')
+            aci_whole = 'plotly_app.png'
+            fig.write_image(aci_whole, width=1200, height=600)
 
     return fig
