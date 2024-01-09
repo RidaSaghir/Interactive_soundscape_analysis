@@ -59,6 +59,7 @@ with gr.Blocks(css=css) as demo:
 
         with gr.Column():
             with gr.Row():
+                # Look into (name, value) thing of drop down option gradio
                 index_select = gr.Dropdown(
             ["ACI (Acoustic Complexity Index)", "ENT (Temporal Entropy Index)", "CVR LF (Acoustic Cover Index - Low Freq)",
              "CVR MF (Acoustic Cover Index - Mid Freq)", "CVR HF (Acoustic Cover Index - High Freq)",
@@ -72,6 +73,8 @@ with gr.Blocks(css=css) as demo:
                                         label="Select the range for x axis for plotting the values")
                 radio_groupby = gr.Radio(["Year", "Month", "Week", "Day"],
                                          label="Select the grouping (hue) for plotting the values")
+            with gr.Row():
+                disclaimer = gr.Text(value="With this option, there could be only 2 resolutions possible i.e 'Hourly' and 'Minutes'", label="Note:", visible=False)
             with gr.Row():
                 with gr.Column():
                     submit_btn = gr.Button("Plot for the dates")
@@ -103,9 +106,16 @@ with gr.Blocks(css=css) as demo:
             clusters_pic = gr.Plot(label="Clusters based on k-means")
             submit_btn_clusters =gr.Button('Plot Clusters', interactive=True)
 
+    def display_options(selected_option):
+        if selected_option == 'diel cycle':
+            return gr.Text(visible=True)
+        else :
+            return gr.Text(visible=False)
+
     submit_btn.click(calculate_plot_whole_year, inputs=[radio_x_axis, radio_groupby, index_select, resolution], outputs=avg_aci_whole)
     submit_btn_2.click(call_plot_aci_values_regions, [plot, hue, region_type], acoustic_region_plot)
     submit_btn_clusters.click(clustering, [clusters_ideal, num_clusters, cluster_indices], clusters_pic)
+    radio_x_axis.change(display_options, radio_x_axis, disclaimer)
 
 if __name__ == "__main__":
     demo.launch()
