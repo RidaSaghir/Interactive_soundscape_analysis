@@ -271,50 +271,19 @@ def aci_whole_plot(df, radio_x_axis, radio_groupby, y_variable, resolution):
             fig.write_image(aci_whole, width=1200, height=600)
 
     if radio_x_axis == 'linear':
-        if df['Year'].nunique() > 1:
-            resolution_mapping = {
-                'Yearly': lambda x: x['Date'].dt.year,
-                'Monthly': lambda x: x['Date'].dt.year + x['Date'].dt.month / 12,
-                'Weekly': lambda x: x['Date'].dt.year + x['Date'].dt.month / 12 + x['Date'].dt.isocalendar().week / 52,
-                'Daily': lambda x: x['Date'].dt.year + x['Date'].dt.month / 12 + x['Date'].dt.isocalendar().week / 52 + x['Date'].dt.day / 365,
-                'Hourly': lambda x: x['Date'].dt.year + x['Date'].dt.month / 12 + x['Date'].dt.isocalendar().week / 52 + x['Date'].dt.day / 365 + x['Date'].dt.hour / 8760,
-                'Minutes': lambda x: x['Date'].dt.year + x['Date'].dt.month / 12 + x['Date'].dt.isocalendar().week / 52 + x['Date'].dt.day / 365
-                                     + x['Date'].dt.hour / 8760 + x['Date'].dt.minutes / 525600,
-            }
-        elif df['Month'].nunique() > 1:
-            resolution_mapping = {
-                'Monthly': lambda x: x['Date'].dt.month,
-                'Weekly': lambda x: x['Date'].dt.month + x['Date'].dt.isocalendar().week / 4,
-                'Daily': lambda x: x['Date'].dt.month + x['Date'].dt.isocalendar().week / 4 + x['Date'].dt.day / 31,
-                'Hourly': lambda x: x['Date'].dt.month + x['Date'].dt.isocalendar().week / 4 + x['Date'].dt.day / 31 + x['Date'].dt.hour / 744,
-                'Minutes': lambda x: x['Date'].dt.month + x['Date'].dt.isocalendar().week / 4 + x['Date'].dt.day / 31 + x['Date'].dt.hour / 744 + x[
-                    'Date'].dt.minute / 44640
-            }
-        elif df['Week'].nunique() > 1:
-            resolution_mapping = {
-                'Monthly': lambda x: x['Date'].dt.isocalendar().week,
-                'Weekly': lambda x: x['Date'].dt.isocalendar().week,
-                'Daily': lambda x: x['Date'].dt.isocalendar().week + x['Date'].dt.day / 7,
-                'Hourly': lambda x: x['Date'].dt.isocalendar().week + x['Date'].dt.day / 7 + x['Date'].dt.hour / 168,
-                'Minutes': lambda x: x['Date'].dt.isocalendar().week + x['Date'].dt.day / 7 + x['Date'].dt.hour / 168 + x[
-                    'Date'].dt.minute / 10080
-            }
-        elif df['Day'].nunique() > 1:
-            resolution_mapping = {
-                'Monthly': lambda x: x['Date'].dt.day,
-                'Weekly': lambda x: x['Date'].dt.day,
-                'Daily': lambda x: x['Date'].dt.day,
-                'Hourly': lambda x: x['Date'].dt.day + x['Date'].dt.hour / 24,
-                'Minutes': lambda x: x['Date'].dt.day + x['Date'].dt.hour / 24 + x[
-                    'Date'].dt.minute / 1440
-            }
-
+        resolution_mapping = lambda resolution: 'Y' if resolution == 'Yearly' else 'M' if resolution == 'Monthly' else 'W' if resolution == 'Weekly' else 'D' if resolution == 'Daily' else 'H' if resolution == 'Hourly' else 'T' if resolution == 'Minutes' else None
 
         if radio_groupby == 'Year':
-            df['Year_x'] = resolution_mapping.get(resolution)(df)
-            fig = px.scatter(df, x='Year_x', y=y_var, color='Year', opacity=0.8, trendline='lowess',
-                             hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True, 'Year_x': False})
-            fig.update_layout(title='Average ACI', xaxis_title='Linear', yaxis_title='Average ACI Value')
+            resolution_x = resolution_mapping(resolution)
+            # Set 'Date' as the index
+            df.set_index('Date', inplace=True)
+            df_filtered = df[[y_var, 'Year']]
+            df_resampled = df_filtered.resample(resolution_x).mean().reset_index()
+            fig = px.line(df_resampled, x='Date', y='ACI', title='ACI over Time with {} resolution'.format(resolution))
+
+            fig = px.scatter(df_resampled, x='Date', y=y_var, color='Year', opacity=0.8, trendline='lowess',
+                             hover_data={'Date' : True})
+            fig.update_layout(title='ACI over Time with {} resolution'.format(resolution), xaxis_title='Linear', yaxis_title='Average ACI Value')
             aci_whole = 'plotly_app.png'
             fig.write_image(aci_whole, width=1200, height=600)
 
