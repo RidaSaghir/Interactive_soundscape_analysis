@@ -66,7 +66,7 @@ with gr.Blocks(css=css) as demo:
              ("EVN (Event Count Index)", 'EVN')],
                     label="Acoustic Indices", info="Will add more indices later!"
         )
-                resolution = gr.Radio(["Monthly", "Weekly", "Daily", "Hourly", "Minutes"],
+                resolution = gr.Radio(["Monthly", "Daily", "Hourly", "Minutes"],
                                         label="Select the resolution for plotting the values")
             with gr.Row():
                 radio_x_axis = gr.Radio(["year cycle", "diel cycle", "linear"],
