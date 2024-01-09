@@ -61,9 +61,9 @@ with gr.Blocks(css=css) as demo:
             with gr.Row():
                 # Look into (name, value) thing of drop down option gradio
                 index_select = gr.Dropdown(
-            ["ACI (Acoustic Complexity Index)", "ENT (Temporal Entropy Index)", "CVR LF (Acoustic Cover Index - Low Freq)",
-             "CVR MF (Acoustic Cover Index - Mid Freq)", "CVR HF (Acoustic Cover Index - High Freq)",
-             "EVN (Event Count Index)"],
+            [("ACI (Acoustic Complexity Index)", 'ACI'), ("ENT (Temporal Entropy Index)", 'ENT'), ("CVR LF (Acoustic Cover Index - Low Freq)", 'LFC'),
+             ("CVR MF (Acoustic Cover Index - Mid Freq)", 'MFC'), ("CVR HF (Acoustic Cover Index - High Freq)", 'HFC'),
+             ("EVN (Event Count Index)", 'EVN')],
                     label="Acoustic Indices", info="Will add more indices later!"
         )
                 resolution = gr.Radio(["Monthly", "Weekly", "Daily", "Hourly", "Minutes"],

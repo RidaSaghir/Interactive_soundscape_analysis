@@ -118,19 +118,7 @@ def plot_aci_values_regions(df, plot, hue, region_type):
     return region_wise
 
 
-def aci_whole_plot(df, radio_x_axis, radio_groupby, y_variable, resolution):
-    if y_variable == 'ACI (Acoustic Complexity Index)':
-        y_var = 'ACI'
-    elif y_variable == 'ENT (Temporal Entropy Index)':
-        y_var = 'ENT'
-    elif y_variable == 'CVR LF (Acoustic Cover Index - Low Freq)':
-        y_var = 'LFC'
-    elif y_variable == 'CVR MF (Acoustic Cover Index - Mid Freq)':
-        y_var = 'MFC'
-    elif y_variable == 'CVR HF (Acoustic Cover Index - High Freq)':
-        y_var = 'HFC'
-    elif y_variable == 'EVN (Event Count Index)':
-        y_var = 'EVN'
+def aci_whole_plot(df, radio_x_axis, radio_groupby, y_var, resolution):
 
     df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format = '%Y/%m/%d %H:%M')
 
@@ -279,11 +267,9 @@ def aci_whole_plot(df, radio_x_axis, radio_groupby, y_variable, resolution):
             df.set_index('Date', inplace=True)
             df_filtered = df[[y_var, 'Year']]
             df_resampled = df_filtered.resample(resolution_x).mean().reset_index()
-            fig = px.line(df_resampled, x='Date', y='ACI', title='ACI over Time with {} resolution'.format(resolution))
-
             fig = px.scatter(df_resampled, x='Date', y=y_var, color='Year', opacity=0.8, trendline='lowess',
                              hover_data={'Date' : True})
-            fig.update_layout(title='ACI over Time with {} resolution'.format(resolution), xaxis_title='Linear', yaxis_title='Average ACI Value')
+            fig.update_layout(title='{} over Time with {} resolution'.format(y_var,resolution), xaxis_title='Linear', yaxis_title='Average ACI Value')
             aci_whole = 'plotly_app.png'
             fig.write_image(aci_whole, width=1200, height=600)
 
