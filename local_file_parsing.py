@@ -4,8 +4,7 @@ import csv
 from table_calculations import calculate_values
 from datetime import datetime
 
-folder_path = ('/Users/ridasaghir/Desktop/git_hf_noronha_full/noronha_full_01')
-#folder_path = ('audio_files')
+folder_path = ('/Users/ridasaghir/Desktop/incipo')
 output_csv = 'parsed_info.csv'
 
 def parse_audio_files(folder_path, output_csv):

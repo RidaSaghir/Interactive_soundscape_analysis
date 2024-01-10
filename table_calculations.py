@@ -12,7 +12,12 @@ from maad import features, sound, util
 def calculate_values(folder_path, audio_file, hour, minute, timestamp):
 
     audio_path = os.path.join(folder_path, audio_file)  # Create the full path to the audio file
-    y, sr = librosa.load(audio_path, sr=None)
+    try:
+        y, sr = librosa.load(audio_path, sr=None)
+    except Exception as e:
+        print(f"Error loading audio file {audio_path}: {e}")
+        return None
+
     w_filtered = maad.sound.select_bandwidth(y, sr, fcut=(482, 12000), forder=5,
                                              fname='butter',
                                              ftype='bandpass')
