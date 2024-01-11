@@ -80,8 +80,14 @@ with gr.Blocks(css=css) as demo:
                     submit_btn = gr.Button("Plot for the dates")
                     avg_aci_whole = gr.Plot(label="Average ACI over whole timeline")
 
-    with gr.Tab('Plots according to regions'):
+    with gr.Tab('Acoustic region analysis'):
         with gr.Column():
+            with gr.Row():
+                upload_fcs = gr.UploadButton("Upload files to create false colour spectrogram", file_types=["image", "video"],
+                                            file_count="multiple")
+                indices_fcs = gr.CheckboxGroup([('ACI', 'ACI_per_bin'), ('ENT', 'Ht_per_bin'), ('EVN', 'EVNspCount_per_bin')],
+                                               label="Select three acoustic indices for the spectrogram")
+
             region_type = gr.CheckboxGroup(
                     ["Region 1", "Region 2", "Region 3", "Region 4",
                      "Region 5", "Region 6", "Region 7", "Region 8",
