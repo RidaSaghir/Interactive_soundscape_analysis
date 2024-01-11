@@ -33,6 +33,10 @@ def detect_datasets():
     #unique_years = df['Year'].unique()
     return unique_years
 
+def upload_file_fcs(files):
+    file_paths = [file.name for file in files]
+    return file_paths
+
 css = """
   #mkd {
     height: 500px; 
@@ -82,25 +86,29 @@ with gr.Blocks(css=css) as demo:
 
     with gr.Tab('Acoustic region analysis'):
         with gr.Column():
-            with gr.Row():
-                upload_fcs = gr.UploadButton("Upload files to create false colour spectrogram", file_types=["image", "video"],
-                                            file_count="multiple")
-                indices_fcs = gr.CheckboxGroup([('ACI', 'ACI_per_bin'), ('ENT', 'Ht_per_bin'), ('EVN', 'EVNspCount_per_bin')],
-                                               label="Select three acoustic indices for the spectrogram")
+            with gr.Accordion('False Color Spectrogram', open=False):
+                with gr.Row():
+                    upload_fcs = gr.UploadButton("Click to Upload Files for false colur spectrogram", file_types=["audio"],
+                                                    file_count="multiple")
+                with gr.Row():
+                    file_output_fcs = gr.File(visible=False)
+                    indices_fcs = gr.CheckboxGroup([('ACI', 'ACI_per_bin'), ('ENT', 'Ht_per_bin'), ('EVN', 'EVNspCount_per_bin')],
+                                                   label="Select three acoustic indices for the spectrogram")
 
-            region_type = gr.CheckboxGroup(
-                    ["Region 1", "Region 2", "Region 3", "Region 4",
-                     "Region 5", "Region 6", "Region 7", "Region 8",
-                     "Region 9", "Region 10", "Region 11", "Region 12",
-                     "Region 13", "Region 14", "Region 15", "Region 16",
-                     "Region 17", "Region 18", "Region 19", "Region 20"], label="Select acoustic regions to compare")
-            with gr.Row():
-                hue = gr.Radio(["Years on x-axis", "Regions on x-axis"], label='Select the plot settings')
-                plot = gr.Radio(["Bar plot", "Time series plot"], label='Select the type of plot')
-            submit_btn_2 = gr.Button("Plot according to regions")
-        with gr.Column():
-        # Create Gradio blocks for outputs
-            acoustic_region_plot = gr.outputs.Image(label="Average ACI over acoustic regions", type="pil")
+            with gr.Accordion('Acoustic indices plot according to region', open=False):
+                region_type = gr.CheckboxGroup(
+                        ["Region 1", "Region 2", "Region 3", "Region 4",
+                         "Region 5", "Region 6", "Region 7", "Region 8",
+                         "Region 9", "Region 10", "Region 11", "Region 12",
+                         "Region 13", "Region 14", "Region 15", "Region 16",
+                         "Region 17", "Region 18", "Region 19", "Region 20"], label="Select acoustic regions to compare")
+                with gr.Row():
+                    hue = gr.Radio(["Years on x-axis", "Regions on x-axis"], label='Select the plot settings')
+                    plot = gr.Radio(["Bar plot", "Time series plot"], label='Select the type of plot')
+                submit_btn_2 = gr.Button("Plot according to regions")
+                with gr.Column():
+                    # Create Gradio blocks for outputs
+                    acoustic_region_plot = gr.outputs.Image(label="Average ACI over acoustic regions", type="pil")
 
     with gr.Tab('Clustering'):
         with gr.Column():
@@ -122,6 +130,7 @@ with gr.Blocks(css=css) as demo:
     submit_btn_2.click(call_plot_aci_values_regions, [plot, hue, region_type], acoustic_region_plot)
     submit_btn_clusters.click(clustering, [clusters_ideal, num_clusters, cluster_indices], clusters_pic)
     radio_x_axis.change(display_options, radio_x_axis, disclaimer)
+    upload_fcs.upload(upload_file_fcs, upload_fcs, file_output_fcs)
 
 if __name__ == "__main__":
     demo.launch()
