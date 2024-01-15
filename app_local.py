@@ -3,7 +3,7 @@ import pandas as pd
 from graph_plotting import aci_whole_plot
 from graph_plotting import plot_aci_values_regions
 from huggingface_hub import login
-from clustering import kmeans_clustering
+from clustering import ClusteringVisualizer
 from false_color_spec_2 import create_fcs
 from correlation_map import create_cormap
 import os
@@ -18,6 +18,8 @@ class AcousticAnalyzerApp:
         self.file_paths_fcs = []
         self.file_paths_interface_fcs = []
         self.df = pd.read_csv(csv_file)
+        self.clustering_visualizer = ClusteringVisualizer(self.df)
+
 
     def calculate_plot_whole_year(self, radio_x_axis, radio_groupby, index_select, resolution):
         avg_aci_whole = aci_whole_plot(self.df, radio_x_axis, radio_groupby, index_select, resolution)
@@ -27,10 +29,17 @@ class AcousticAnalyzerApp:
         acoustic_region_plot = plot_aci_values_regions(self.df, plot, hue, region_type)
         return acoustic_region_plot
 
-    def clustering(self, clusters_ideal, num_clusters, cluster_indices):
-        clusters_pic = kmeans_clustering(self.df, cluster_indices, clusters_ideal, num_clusters)
+    def kmeans_clustering(self, clusters_ideal, num_clusters, cluster_indices):
+        clusters_pic = self.clustering_visualizer.kmeans_clustering(cluster_indices, clusters_ideal, num_clusters)
+
+        #clusters_pic = kmeans_clustering(self.df, cluster_indices, clusters_ideal, num_clusters)
         return clusters_pic
 
+    def hierar_clustering(self, clusters_ideal, num_clusters, cluster_indices):
+        clusters_pic_hierar = self.clustering_visualizer.hierar_clustering()
+
+        #clusters_pic = kmeans_clustering(self.df, cluster_indices, clusters_ideal, num_clusters)
+        return clusters_pic_hierar
 
     def upload_file_fcs(self, files):
         self.file_paths_interface_fcs = []
@@ -172,14 +181,21 @@ class AcousticAnalyzerApp:
                             acoustic_region_plot = gr.Image(label="Average ACI over acoustic regions", type="pil")
 
             with gr.Tab('Clustering'):
-                with gr.Column():
-                    with gr.Row():
-                        clusters_ideal = gr.Radio(['Choose random number of clusters', 'Get optimum number of clusters'], interactive=True)
-                        num_clusters = gr.Slider(minimum=1, maximum=10, value=2, step=1,
-                                                  label="Select the number of clusters", interactive=True, visible=True)
-                        cluster_indices = gr.CheckboxGroup(['ACI', 'ENT', 'EVN', 'ECV', 'EAS', 'LFC', 'HFC', 'MFC', 'EPS'], label= 'Choose the parameters for clustering')
-                    clusters_pic = gr.Plot(label="Clusters based on k-means")
-                    submit_btn_clusters =gr.Button('Plot Clusters', interactive=True)
+                with gr.Accordion('Clustering based on Acoustic Indices', open=False):
+                    with gr.Column():
+                        with gr.Row():
+                            clusters_ideal = gr.Radio(['Choose random number of clusters', 'Get optimum number of clusters'], label="How to chose clusters", interactive=True)
+                            num_clusters = gr.Slider(minimum=1, maximum=10, value=2, step=1,
+                                                      label="Select the number of clusters", interactive=True, visible=True)
+                            cluster_indices = gr.CheckboxGroup(['ACI', 'ENT', 'EVN', 'ECV', 'EAS', 'LFC', 'HFC', 'MFC', 'EPS'], label= 'Choose the parameters for clustering')
+                        submit_btn_clusters =gr.Button('Plot Clusters', interactive=True)
+                        clusters_pic =  gr.Plot(label="Clusters based on k-means")
+                        with gr.Row():
+                            btn_hierarchical_indices = gr.Button("Perform hierarchical clustering", interactive=True)
+                        with gr.Row():
+                            #clusters_pic_hierar = gr.Plot(label="Clusters based on hierarchical clustering")
+                            clusters_pic_hierar = gr.Image(label="Clusters based on hierarchical clustering")
+
 
             def display_options(selected_option):
                 if selected_option == 'diel cycle':
@@ -189,7 +205,8 @@ class AcousticAnalyzerApp:
 
             submit_btn.click(self.calculate_plot_whole_year, inputs=[radio_x_axis, radio_groupby, index_select, resolution], outputs=avg_aci_whole)
             submit_btn_2.click(self.call_plot_aci_values_regions, [plot, hue, region_type], acoustic_region_plot)
-            submit_btn_clusters.click(self.clustering, [clusters_ideal, num_clusters, cluster_indices], clusters_pic)
+            submit_btn_clusters.click(self.kmeans_clustering, [clusters_ideal, num_clusters, cluster_indices], clusters_pic)
+            btn_hierarchical_indices.click(self.hierar_clustering, outputs=[clusters_pic_hierar])
             submit_fcs.click(self.call_fcs, inputs=[indices_fcs, unit_fcs], outputs=output_fcs)
             submit_cor.click(self.call_cor, inputs=[threshold_cor], outputs=output_cor)
             radio_x_axis.change(display_options, radio_x_axis, disclaimer)
