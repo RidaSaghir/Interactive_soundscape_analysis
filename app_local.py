@@ -144,13 +144,15 @@ class AcousticAnalyzerApp:
                             upload_fcs = gr.UploadButton("Click to Upload Files for false color spectrogram", file_types=["audio"],
                                                             file_count="multiple")
                         with gr.Row():
-                            file_output_fcs = gr.File(visible=True)
                             indices_fcs = gr.CheckboxGroup([("ACI", 'ACI_per_bin'), ("ENT", 'Ht_per_bin'), ("EVN", 'EVNspCount_per_bin'),
                                                             ("ACT", 'ACTspCount'), ],
                                                            label="Select three acoustic indices for the spectrogram")
                             unit_fcs = gr.Radio(['minutes', 'hours', 'days', 'weeks'], label="Select the units for spectrogram")
                         with gr.Row():
                             submit_fcs = gr.Button('Create false color spectrogram', interactive=True)
+                        with gr.Row():
+                            file_output_fcs = gr.File(visible=True)
+                        with gr.Row():
                             output_fcs = gr.Image(label="False color spectrogram", type="pil")
 
                     with gr.Accordion('Correlation Map', open=False):
@@ -158,10 +160,12 @@ class AcousticAnalyzerApp:
                             upload_cor = gr.UploadButton("Click to Upload Files for false color spectrogram", file_types=["audio"],
                                                             file_count="multiple")
                         with gr.Row():
-                            file_output_cor = gr.File(visible=True)
                             threshold_cor = gr.Textbox(label="Threshold value. E.g: 0.5")
+                            with gr.Column():
+                                submit_cor = gr.Button('Create correlation maüp', interactive=True)
                         with gr.Row():
-                            submit_cor = gr.Button('Create correlation maüp', interactive=True)
+                            file_output_cor = gr.File(visible=True)
+                        with gr.Row():
                             # output_cor = gr.Image(label="Correlation Map", type="pil")
                             output_cor = gr.Plot(label="Correlation Map")
 

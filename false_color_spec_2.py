@@ -6,6 +6,8 @@ from maad.util import (
     plot_features_map, plot_features, false_Color_Spectro
     )
 from maad import sound, features
+import matplotlib.pyplot as plt
+
 df_indices_per_bin = pd.read_csv('example.csv')
 
 directory_path = '/Users/ridasaghir/Desktop/24_hour'
@@ -68,16 +70,6 @@ def create_fcs(indices, files, unit_fcs):
             df.drop(index, inplace=True)
             continue
 
-        df_audio_ind = features.all_temporal_alpha_indices(
-            s=wave,
-            fs=fs,
-            gain=G,
-            sensibility=S,
-            dB_threshold=3,
-            rejectDuration=0.01,
-            verbose=False,
-            display=False
-        )
         # Compute the Power Spectrogram Density (PSD) : Sxx_power
         Sxx_power, tn, fn, ext = sound.spectrogram(
             x=wave,
@@ -113,14 +105,6 @@ def create_fcs(indices, files, unit_fcs):
         df_row.index.name = 'Date'
         df_row = df_row.reset_index()
 
-        # create a row with the different scalar indices
-        row_scalar_indices = pd.concat(
-            [df_row, df_audio_ind, df_spec_ind],
-            axis=1
-        )
-        # add the row with scalar indices into the df_indices dataframe
-        df_indices = pd.concat([df_indices, row_scalar_indices])
-
         # create a row with the different vector indices
         row_vector_indices = pd.concat(
             [df_row, df_spec_ind_per_bin],
@@ -130,7 +114,6 @@ def create_fcs(indices, files, unit_fcs):
         df_indices_per_bin = pd.concat([df_indices_per_bin, row_vector_indices])
 
     # # Set back Date as index
-    df_indices = df_indices.set_index('Date')
     df_indices_per_bin = df_indices_per_bin.set_index('Date')
 
     fcs, triplet = false_Color_Spectro(
@@ -143,9 +126,9 @@ def create_fcs(indices, files, unit_fcs):
         figsize=(12,6),
         savefig='spec'
         )
-    print("Minimum Datetime:", df.index.min())
-    print("Maximum Datetime:", df.index.max())
-    print(df_indices_per_bin)
-    # print(df)
-    return fcs
+    for f in os.listdir('.'):
+        if os.path.isfile(f) and f.startswith('spec'):
+            return f
+
+
 
