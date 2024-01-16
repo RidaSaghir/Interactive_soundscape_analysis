@@ -110,11 +110,8 @@ class AcousticAnalyzerApp:
                 gr.Markdown(
                     '<span style="color:#575757;font-size:16px">It corresponds to the portion of the spectrogram above a threshold frequency per frequency along time axis</span>')
             with gr.Tab('Whole Year Plots'):
-                with gr.Column():
                     # Add a descriptive text above the button
-                    gr.Label("Acoustic Region Analyzer")
                     #dates = gr.CheckboxGroup(label="Data from following dates were found. Select dates to analyse", choices=detect_datasets())
-
                 with gr.Column():
                     with gr.Row():
                         index_select = gr.Dropdown(
