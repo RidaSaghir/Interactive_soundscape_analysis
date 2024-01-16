@@ -8,9 +8,6 @@ from maad.util import (
 from maad import sound, features
 import matplotlib.pyplot as plt
 
-df_indices_per_bin = pd.read_csv('example.csv')
-
-directory_path = '/Users/ridasaghir/Desktop/24_hour'
 def create_dataframe_from_wav_files(files):
     # List all files in the directory
 

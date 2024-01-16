@@ -6,9 +6,7 @@ from maad.util import (
     plot_features_map, plot_features, false_Color_Spectro
     )
 from maad import sound, features
-df_indices_per_bin = pd.read_csv('example.csv')
 
-directory_path = '/Users/ridasaghir/Desktop/24_hour'
 def create_dataframe_from_wav_files(files):
     # List all files in the directory
 
