@@ -52,7 +52,7 @@ def plot_aci_values_regions(df, plot, hue, region_type):
             # Plot 1: Regions on x-axis, years as hue
             fig = px.bar(df, x="Region", y="Value", color="Year_Month_Day", barmode="group",
                          labels={"Value": "Value", "Region": "Region"},
-                         title="ACI values according to regions for different dates")
+                         title="ACI values according to regions for different years")
 
             # Customize the layout
             fig.update_layout(
@@ -81,7 +81,7 @@ def plot_aci_values_regions(df, plot, hue, region_type):
             # Plot 2: Years on x-axis, regions as hue
             fig = px.bar(df, x="Year_Month_Day", y="Value", color="Region", barmode="group",
                          labels={"Value": "Value", "Region": "Region"},
-                         title="ACI values according to regions for different dates")
+                         title="ACI values according to regions for different years")
 
             # Customize the layout
             fig.update_layout(
@@ -120,7 +120,7 @@ def plot_aci_values_regions(df, plot, hue, region_type):
             # Plot 1: Regions on x-axis, years as hue
             fig = px.line(df, x="Region", y="Value", color="Year_Month_Day",
                          labels={"Value": "Value", "Region": "Region"},
-                         title="ACI values according to regions for different dates")
+                         title="ACI values according to regions for different years")
 
             # Customize the layout
             fig.update_layout(
@@ -149,7 +149,7 @@ def plot_aci_values_regions(df, plot, hue, region_type):
             # Plot 2: Years on x-axis, regions as hue
             fig = px.line(df, x="Year_Month_Day", y="Value", color="Region",
                          labels={"Value": "Value", "Region": "Region"},
-                         title="ACI values according to regions for different dates")
+                         title="ACI values according to regions for different years")
 
             # Customize the layout
             fig.update_layout(
