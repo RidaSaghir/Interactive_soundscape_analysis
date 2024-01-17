@@ -50,32 +50,61 @@ def plot_aci_values_regions(df, plot, hue, region_type):
 
         if hue == 'Regions on x-axis':
             # Plot 1: Regions on x-axis, years as hue
+            fig = px.bar(df, x="Region", y="Value", color="Year_Month_Day", barmode="group",
+                         labels={"Value": "Value", "Region": "Region"},
+                         title="ACI values according to regions for different dates")
 
+            # Customize the layout
+            fig.update_layout(
+                xaxis_title="Region",
+                yaxis_title="Value",
+                xaxis_tickangle=45,
+                bargap=0.2,
+                showlegend=True,
+                legend_title="Date",
+                height=600,
+                width=1200
+            )
             # Plot using Seaborn
-            sns.set(style="whitegrid")
-            plt.figure(figsize=(12, 6))
-            ax = sns.barplot(data=df, x="Region", y="Value", hue="Year_Month_Day")
-            ax.set(xlabel="Region", ylabel="Value")
-            plt.xticks(rotation=45)
-            plt.title("ACI values according to regions for different dates")
-            # Display or save the plot
-            plt.grid(True)
-            region_wise = ('region_wise.png')
-            plt.savefig(region_wise, dpi=150)
+            # sns.set(style="whitegrid")
+            # plt.figure(figsize=(12, 6))
+            # ax = sns.barplot(data=df, x="Region", y="Value", hue="Year_Month_Day")
+            # ax.set(xlabel="Region", ylabel="Value")
+            # plt.xticks(rotation=45)
+            # plt.title("ACI values according to regions for different dates")
+            # # Display or save the plot
+            # plt.grid(True)
+            # region_wise = ('region_wise.png')
+            # plt.savefig(region_wise, dpi=150)
 
         elif hue == 'Years on x-axis':
             # Plot 2: Years on x-axis, regions as hue
-            plt.figure(figsize=(10, 6))
-            sns.barplot(data=df, x='Year_Month_Day', y='Value', hue='Region')
-            plt.xlabel('Years')
-            plt.ylabel('Average ACI Values')
-            plt.title('ACI Values by Region and Year')
-            plt.legend(title='Region')
-            # Display or save the plot
-            plt.grid(True)
-            region_wise = ('region_wise.png')
-            plt.savefig(region_wise, dpi=150)
-            plt.show()
+            fig = px.bar(df, x="Year_Month_Day", y="Value", color="Region", barmode="group",
+                         labels={"Value": "Value", "Region": "Region"},
+                         title="ACI values according to regions for different dates")
+
+            # Customize the layout
+            fig.update_layout(
+                xaxis_title="Years",
+                yaxis_title="Value",
+                xaxis_tickangle=45,
+                bargap=0.2,
+                showlegend=True,
+                legend_title="Regions",
+                height=600,
+                width=1200
+            )
+            # plt.figure(figsize=(10, 6))
+            # sns.barplot(data=df, x='Year_Month_Day', y='Value', hue='Region')
+            # plt.xlabel('Years')
+            # plt.ylabel('Average ACI Values')
+            # plt.title('ACI Values by Region and Year')
+            # plt.legend(title='Region')
+            # # Display or save the plot
+            # plt.grid(True)
+            # region_wise = ('region_wise.png')
+            # plt.savefig(region_wise, dpi=150)
+            # plt.show()
 
     elif plot == 'Time series plot':
         # Convert the dictionary to a list of dictionaries
@@ -89,33 +118,63 @@ def plot_aci_values_regions(df, plot, hue, region_type):
 
         if hue == 'Regions on x-axis':
             # Plot 1: Regions on x-axis, years as hue
-            plt.figure(figsize=(10, 6))
-            sns.lineplot(data=df, x='Region', y='Value', hue='Year_Month_Day')
-            plt.xlabel('Regions')
-            plt.ylabel('Average ACI Values')
-            plt.title('ACI Values by Region and Year')
-            plt.legend(title='Year')
-            # Display or save the plot
-            plt.grid(True)
-            region_wise = ('region_wise.png')
-            plt.savefig(region_wise, dpi=150)
-            plt.show()
+            fig = px.line(df, x="Region", y="Value", color="Year_Month_Day",
+                         labels={"Value": "Value", "Region": "Region"},
+                         title="ACI values according to regions for different dates")
+
+            # Customize the layout
+            fig.update_layout(
+                xaxis_title="Regions",
+                yaxis_title="Value",
+                xaxis_tickangle=45,
+                bargap=0.2,
+                showlegend=True,
+                legend_title="Date",
+                height=600,
+                width=1200
+            )
+            # plt.figure(figsize=(10, 6))
+            # sns.lineplot(data=df, x='Region', y='Value', hue='Year_Month_Day')
+            # plt.xlabel('Regions')
+            # plt.ylabel('Average ACI Values')
+            # plt.title('ACI Values by Region and Year')
+            # plt.legend(title='Year')
+            # # Display or save the plot
+            # plt.grid(True)
+            # region_wise = ('region_wise.png')
+            # plt.savefig(region_wise, dpi=150)
+            # plt.show()
 
         elif hue == 'Years on x-axis':
-            # Plot 2: Years on x-axis, years as hue
-            plt.figure(figsize=(10, 6))
-            sns.lineplot(data=df, x='Year_Month_Day', y='Value', hue='Region')
-            plt.xlabel('Years')
-            plt.ylabel('Average ACI Values')
-            plt.title('ACI Values by Region and Year')
-            plt.legend(title='Region')
-            # Display or save the plot
-            plt.grid(True)
-            region_wise = ('region_wise.png')
-            plt.savefig(region_wise, dpi=150)
-            plt.show()
+            # Plot 2: Years on x-axis, regions as hue
+            fig = px.line(df, x="Year_Month_Day", y="Value", color="Region",
+                         labels={"Value": "Value", "Region": "Region"},
+                         title="ACI values according to regions for different dates")
 
-    return region_wise
+            # Customize the layout
+            fig.update_layout(
+                xaxis_title="Years",
+                yaxis_title="Value",
+                xaxis_tickangle=45,
+                bargap=0.2,
+                showlegend=True,
+                legend_title="Regions",
+                height=600,
+                width=1200
+            )
+            # plt.figure(figsize=(10, 6))
+            # sns.lineplot(data=df, x='Year_Month_Day', y='Value', hue='Region')
+            # plt.xlabel('Years')
+            # plt.ylabel('Average ACI Values')
+            # plt.title('ACI Values by Region and Year')
+            # plt.legend(title='Region')
+            # # Display or save the plot
+            # plt.grid(True)
+            # region_wise = ('region_wise.png')
+            # plt.savefig(region_wise, dpi=150)
+            # plt.show()
+
+    return fig
 
 
 def aci_whole_plot(df, radio_x_axis, radio_groupby, y_var, resolution):

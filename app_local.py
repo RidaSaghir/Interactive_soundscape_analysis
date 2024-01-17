@@ -179,7 +179,7 @@ class AcousticAnalyzerApp:
                         submit_btn_2 = gr.Button("Plot according to regions")
                         with gr.Column():
                             # Create Gradio blocks for outputs
-                            acoustic_region_plot = gr.Image(label="Average ACI over acoustic regions", type="pil")
+                            acoustic_region_plot = gr.Plot(label="Average ACI over acoustic regions")
 
             with gr.Tab('Clustering'):
                 with gr.Accordion('Clustering based on Acoustic Indices', open=False):

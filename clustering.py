@@ -1,5 +1,3 @@
-import pandas as pd
-import plotly.offline as pyo
 import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.figure_factory as ff
