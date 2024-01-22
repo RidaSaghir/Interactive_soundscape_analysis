@@ -8,8 +8,6 @@ from false_color_spec_2 import create_fcs
 from correlation_map import create_cormap
 import os
 
-access_token_write = "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"
-login(token = access_token_write)
 
 csv_file = 'parsed_info.csv'
 
@@ -35,8 +33,8 @@ class AcousticAnalyzerApp:
         #clusters_pic = kmeans_clustering(self.df, cluster_indices, clusters_ideal, num_clusters)
         return clusters_pic
 
-    def hierar_clustering(self, clusters_ideal, num_clusters, cluster_indices):
-        clusters_pic_hierar = self.clustering_visualizer.hierar_clustering()
+    def hierar_clustering(self, clustering):
+        clusters_pic_hierar = self.clustering_visualizer.hierar_clustering(clustering)
 
         #clusters_pic = kmeans_clustering(self.df, cluster_indices, clusters_ideal, num_clusters)
         return clusters_pic_hierar
@@ -228,7 +226,7 @@ class AcousticAnalyzerApp:
             submit_btn.click(self.calculate_plot_whole_year, inputs=[radio_x_axis, radio_groupby, index_select, resolution], outputs=avg_aci_whole)
             submit_btn_2.click(self.call_plot_aci_values_regions, [plot, hue, region_type], acoustic_region_plot)
             submit_btn_clusters.click(self.kmeans_clustering, [clustering, num_dimensions, clusters_ideal, num_clusters, cluster_indices], clusters_pic)
-            btn_hierarchical_indices.click(self.hierar_clustering, outputs=[clusters_pic_hierar])
+            btn_hierarchical_indices.click(self.hierar_clustering, clustering, outputs=[clusters_pic_hierar])
             submit_fcs.click(self.call_fcs, inputs=[indices_fcs, unit_fcs], outputs=output_fcs)
             submit_cor.click(self.call_cor, inputs=[threshold_cor], outputs=output_cor)
             radio_x_axis.change(display_options, radio_x_axis, disclaimer)
