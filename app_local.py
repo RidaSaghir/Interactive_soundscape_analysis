@@ -29,8 +29,8 @@ class AcousticAnalyzerApp:
         acoustic_region_plot = plot_aci_values_regions(self.df, plot, hue, region_type)
         return acoustic_region_plot
 
-    def kmeans_clustering(self, clusters_ideal, num_clusters, cluster_indices):
-        clusters_pic = self.clustering_visualizer.kmeans_clustering(cluster_indices, clusters_ideal, num_clusters)
+    def kmeans_clustering(self, clustering, num_dimensions, clusters_ideal, num_clusters, cluster_indices):
+        clusters_pic = self.clustering_visualizer.kmeans_clustering(clustering, num_dimensions, cluster_indices, clusters_ideal, num_clusters)
 
         #clusters_pic = kmeans_clustering(self.df, cluster_indices, clusters_ideal, num_clusters)
         return clusters_pic
@@ -141,14 +141,18 @@ class AcousticAnalyzerApp:
                             upload_fcs = gr.UploadButton("Click to Upload Files for false color spectrogram", file_types=["audio"],
                                                             file_count="multiple")
                         with gr.Row():
+                            gr.Markdown(
+                                '<span style="color:#575757;font-size:16px">Note: Please wait until all the chosen files are uploaded. </span>')
+                        with gr.Row():
                             indices_fcs = gr.CheckboxGroup([("ACI", 'ACI_per_bin'), ("ENT", 'Ht_per_bin'), ("EVN", 'EVNspCount_per_bin'),
                                                             ("ACT", 'ACTspCount'), ],
                                                            label="Select three acoustic indices for the spectrogram")
                             unit_fcs = gr.Radio(['minutes', 'hours', 'days', 'weeks'], label="Select the units for spectrogram")
                         with gr.Row():
                             submit_fcs = gr.Button('Create false color spectrogram', interactive=True)
-                        with gr.Row():
-                            file_output_fcs = gr.File(visible=True)
+                        with gr.Accordion('Files uploaded', open=False):
+                            with gr.Row():
+                                file_output_fcs = gr.File(visible=True)
                         with gr.Row():
                             output_fcs = gr.Image(label="False color spectrogram", type="pil")
 
@@ -160,8 +164,9 @@ class AcousticAnalyzerApp:
                             threshold_cor = gr.Textbox(label="Threshold value. E.g: 0.5")
                             with gr.Column():
                                 submit_cor = gr.Button('Create correlation maüp', interactive=True)
-                        with gr.Row():
-                            file_output_cor = gr.File(visible=True)
+                        with gr.Accordion('Files Uploaded', open=False):
+                            with gr.Row():
+                                file_output_cor = gr.File(visible=True)
                         with gr.Row():
                             # output_cor = gr.Image(label="Correlation Map", type="pil")
                             output_cor = gr.Plot(label="Correlation Map")
@@ -185,10 +190,18 @@ class AcousticAnalyzerApp:
                 with gr.Accordion('Clustering based on Acoustic Indices', open=False):
                     with gr.Column():
                         with gr.Row():
-                            clusters_ideal = gr.Radio(['Choose random number of clusters', 'Get optimum number of clusters'], label="How to chose clusters", interactive=True)
-                            num_clusters = gr.Slider(minimum=1, maximum=10, value=2, step=1,
-                                                      label="Select the number of clusters", interactive=True, visible=True)
-                            cluster_indices = gr.CheckboxGroup(['ACI', 'ENT', 'EVN', 'ECV', 'EAS', 'LFC', 'HFC', 'MFC', 'EPS'], label= 'Choose the parameters for clustering')
+                            clustering = gr.Radio([('Use acoustic indices directly', 'acoustic'),
+                                                   ('Use principal component analysis on acoustic indices', 'pca')],
+                                                   label="How to cluster?")
+                            with gr.Column() as output_col:
+                                clusters_ideal = gr.Radio(['Choose own choice of number of clusters', 'Get optimum number of clusters'], label="How to chose number of clusters", interactive=True,
+                                                          visible=True)
+                                num_clusters = gr.Slider(minimum=1, maximum=10, value=2, step=1,
+                                                          label="Select the number of clusters", interactive=True, visible=True)
+                                cluster_indices = gr.CheckboxGroup(['ACI', 'ENT', 'EVN', 'ECV', 'EAS', 'LFC', 'HFC', 'MFC', 'EPS'], label= 'Choose the parameters for clustering',
+                                                                   visible=False)
+                                num_dimensions = gr.Slider(minimum=1, maximum=10, value=2, step=1,
+                                                          label="Select the number of dimensions for PCA", interactive=True, visible=False)
                         submit_btn_clusters =gr.Button('Plot Clusters', interactive=True)
                         clusters_pic =  gr.Plot(label="Clusters based on k-means")
                         with gr.Row():
@@ -204,13 +217,22 @@ class AcousticAnalyzerApp:
                 else :
                     return gr.Text(visible=False)
 
+            def clustering_options(selected_option):
+                if selected_option == 'pca':
+                    return {cluster_indices: gr.Radio(visible=False),
+                            num_dimensions: gr.Slider(visible=True)}
+                if selected_option == 'acoustic':
+                    return {cluster_indices: gr.Radio(visible=True),
+                            num_dimensions: gr.Slider(visible=False)}
+
             submit_btn.click(self.calculate_plot_whole_year, inputs=[radio_x_axis, radio_groupby, index_select, resolution], outputs=avg_aci_whole)
             submit_btn_2.click(self.call_plot_aci_values_regions, [plot, hue, region_type], acoustic_region_plot)
-            submit_btn_clusters.click(self.kmeans_clustering, [clusters_ideal, num_clusters, cluster_indices], clusters_pic)
+            submit_btn_clusters.click(self.kmeans_clustering, [clustering, num_dimensions, clusters_ideal, num_clusters, cluster_indices], clusters_pic)
             btn_hierarchical_indices.click(self.hierar_clustering, outputs=[clusters_pic_hierar])
             submit_fcs.click(self.call_fcs, inputs=[indices_fcs, unit_fcs], outputs=output_fcs)
             submit_cor.click(self.call_cor, inputs=[threshold_cor], outputs=output_cor)
             radio_x_axis.change(display_options, radio_x_axis, disclaimer)
+            clustering.change(clustering_options, clustering, [cluster_indices, num_dimensions])
             upload_fcs.upload(self.upload_file_fcs, upload_fcs, file_output_fcs)
             upload_cor.upload(self.upload_file_cor, upload_cor, file_output_cor)
 
