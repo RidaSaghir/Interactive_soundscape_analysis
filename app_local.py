@@ -186,27 +186,35 @@ class AcousticAnalyzerApp:
 
             with gr.Tab('Clustering'):
                 with gr.Accordion('Clustering based on Acoustic Indices', open=False):
-                    with gr.Column():
-                        with gr.Row():
-                            clustering = gr.Radio([('Use acoustic indices directly', 'acoustic'),
-                                                   ('Use principal component analysis on acoustic indices', 'pca')],
-                                                   label="How to cluster?")
-                            with gr.Column() as output_col:
-                                clusters_ideal = gr.Radio(['Choose own choice of number of clusters', 'Get optimum number of clusters'], label="How to chose number of clusters", interactive=True,
-                                                          visible=True)
-                                num_clusters = gr.Slider(minimum=1, maximum=10, value=2, step=1,
-                                                          label="Select the number of clusters", interactive=True, visible=True)
-                                cluster_indices = gr.CheckboxGroup(['ACI', 'ENT', 'EVN', 'ECV', 'EAS', 'LFC', 'HFC', 'MFC', 'EPS'], label= 'Choose the parameters for clustering',
-                                                                   visible=False)
-                                num_dimensions = gr.Slider(minimum=1, maximum=10, value=2, step=1,
-                                                          label="Select the number of dimensions for PCA", interactive=True, visible=False)
-                        submit_btn_clusters =gr.Button('Plot Clusters', interactive=True)
-                        clusters_pic =  gr.Plot(label="Clusters based on k-means")
+                    with gr.Accordion('K Means', open=False):
+                        with gr.Column():
+                            with gr.Row():
+                                clustering = gr.Radio([('Use acoustic indices directly', 'acoustic'),
+                                                       ('Use principal component analysis on acoustic indices', 'pca')],
+                                                       label="How to cluster?")
+                                with gr.Column() as output_col:
+                                    clusters_ideal = gr.Radio(['Choose own choice of number of clusters', 'Get optimum number of clusters'], label="How to chose number of clusters", interactive=True,
+                                                              visible=True)
+                                    num_clusters = gr.Slider(minimum=1, maximum=10, value=2, step=1,
+                                                              label="Select the number of clusters", interactive=True, visible=True)
+                                    cluster_indices = gr.CheckboxGroup(['ACI', 'ENT', 'EVN', 'ECV', 'EAS', 'LFC', 'HFC', 'MFC', 'EPS'], label= 'Choose the parameters for clustering',
+                                                                       visible=False)
+                                    num_dimensions = gr.Slider(minimum=1, maximum=10, value=2, step=1,
+                                                              label="Select the number of dimensions for PCA", interactive=True, visible=False)
+                            submit_btn_clusters =gr.Button('Plot Clusters', interactive=True)
+                            clusters_pic =  gr.Plot(label="Clusters based on k-means")
+                    with gr.Accordion('Hierarchical Clustering', open=False):
                         with gr.Row():
                             btn_hierarchical_indices = gr.Button("Perform hierarchical clustering", interactive=True)
                         with gr.Row():
                             #clusters_pic_hierar = gr.Plot(label="Clusters based on hierarchical clustering")
                             clusters_pic_hierar = gr.Image(label="Clusters based on hierarchical clustering")
+                    with gr.Accordion('Cluster Occurrences (Under development)', open=False):
+                        gr.Markdown(
+                            '<span style="color:#575757;font-size:18px">Barplot for cluster occurrences</span>')
+                        with gr.Row():
+                            which_cluster = gr.Dropdown(['Cluster 1', 'Cluster 2', 'Cluster 3'], label='Select the cluster')
+                            cluster_cycle = gr.Radio(['Year', 'Diel', 'Linear'], label='Select the cycle')
 
 
             def display_options(selected_option):
