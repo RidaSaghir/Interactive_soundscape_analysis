@@ -223,6 +223,12 @@ class AcousticAnalyzerApp:
                     return {cluster_indices: gr.Radio(visible=True),
                             num_dimensions: gr.Slider(visible=False)}
 
+            def ideal_clustering(clusters_ideal):
+                if clusters_ideal == 'Get optimum number of clusters':
+                    return gr.Slider(visible=False)
+                else:
+                    return gr.Slider(visible=True)
+
             submit_btn.click(self.calculate_plot_whole_year, inputs=[radio_x_axis, radio_groupby, index_select, resolution], outputs=avg_aci_whole)
             submit_btn_2.click(self.call_plot_aci_values_regions, [plot, hue, region_type], acoustic_region_plot)
             submit_btn_clusters.click(self.kmeans_clustering, [clustering, num_dimensions, clusters_ideal, num_clusters, cluster_indices], clusters_pic)
@@ -231,6 +237,7 @@ class AcousticAnalyzerApp:
             submit_cor.click(self.call_cor, inputs=[threshold_cor], outputs=output_cor)
             radio_x_axis.change(display_options, radio_x_axis, disclaimer)
             clustering.change(clustering_options, clustering, [cluster_indices, num_dimensions])
+            clusters_ideal.change(ideal_clustering, clusters_ideal, num_clusters)
             upload_fcs.upload(self.upload_file_fcs, upload_fcs, file_output_fcs)
             upload_cor.upload(self.upload_file_cor, upload_cor, file_output_cor)
 
