@@ -24,7 +24,11 @@ def parse_audio_files(folder_path, output_csv):
             match = re.search(date_time_pattern, audio_file)
             if match:
                 year, month, day, hour, minute, second = match.groups()
-                timestamp = f'{hour}:{minute}'
+                year, month, day, hour, minute, second = map(int, (year, month, day, hour, minute, second))
+                # Datetime object
+                timestamp = datetime(year, month, day, hour, minute, second)
+                timestamp_str = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+                #timestamp = f'{hour}:{minute}'
                 noise_profile, snr, aci, temp_ent, EVNcount, lfc, mfc, hfc, ACTsp_count, eps, eas, ecv, regions = calculate_values(
                     folder_path, audio_file, hour, minute, timestamp)
                 # Calculate the week number

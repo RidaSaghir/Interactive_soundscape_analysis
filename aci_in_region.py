@@ -6,13 +6,17 @@ aci_values_region = {}
 aci_counts_region = {}
 
 def compute_ACI(region, Sxx, freq, fs, time):
-    timestamp = datetime.strptime(time, "%H:%M")
+    if not isinstance(time, datetime):
+        timestamp = datetime.strptime(time, "%H:%M")
+
     ref_1 = datetime.strptime("5:30", "%H:%M")
     ref_2 = datetime.strptime("9:00", "%H:%M")
     ref_3 = datetime.strptime("17:30", "%H:%M")
     ref_4 = datetime.strptime("21:00", "%H:%M")
     ref_5 = datetime.strptime("23:59", "%H:%M")
 
+    #To initialize
+    timestamp = time
     # 0 - 5:29 AM
     if region == 'Region 1' and (timestamp.time() < ref_1.time()):
         start_freq = 0  # Modify this to specify the starting frequency in Hz
