@@ -130,7 +130,7 @@ class ClusteringVisualizer:
                 title='K-Means Clustering'
             )
 
-        return fig
+        return fig, self.data
 
     def hierar_clustering(self, clustering):
         # Apply hierarchical clustering

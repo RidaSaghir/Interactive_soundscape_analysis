@@ -17,7 +17,9 @@ class AcousticAnalyzerApp:
         self.file_paths_interface_fcs = []
         self.df = pd.read_csv(csv_file)
         self.clustering_visualizer = ClusteringVisualizer(self.df)
-
+        self.data_clustered = []
+        self.unique_clusters = []
+        self.cluster_options = []
 
     def calculate_plot_whole_year(self, radio_x_axis, radio_groupby, index_select, resolution):
         avg_aci_whole = aci_whole_plot(self.df, radio_x_axis, radio_groupby, index_select, resolution)
@@ -28,10 +30,12 @@ class AcousticAnalyzerApp:
         return acoustic_region_plot
 
     def kmeans_clustering(self, clustering, num_dimensions, clusters_ideal, num_clusters, cluster_indices):
-        clusters_pic = self.clustering_visualizer.kmeans_clustering(clustering, num_dimensions, cluster_indices, clusters_ideal, num_clusters)
+        clusters_pic, self.data_clustered = self.clustering_visualizer.kmeans_clustering(clustering, num_dimensions, cluster_indices, clusters_ideal, num_clusters)
+        self.unique_clusters = sorted(self.data_clustered['KMeans_Cluster'].unique())
+        self.cluster_options = [f"Cluster {cluster}" for cluster in self.unique_clusters]
+        print(self.cluster_options)
 
-        #clusters_pic = kmeans_clustering(self.df, cluster_indices, clusters_ideal, num_clusters)
-        return clusters_pic
+        return clusters_pic, gr.Dropdown(choices=self.cluster_options, interactive=True)
 
     def hierar_clustering(self, clustering):
         clusters_pic_hierar = self.clustering_visualizer.hierar_clustering(clustering)
@@ -213,9 +217,11 @@ class AcousticAnalyzerApp:
                         gr.Markdown(
                             '<span style="color:#575757;font-size:18px">Barplot for cluster occurrences</span>')
                         with gr.Row():
-                            which_cluster = gr.Dropdown(['Cluster 1', 'Cluster 2', 'Cluster 3'], label='Select the cluster')
+                            which_cluster = gr.Dropdown(choices=self.cluster_options, label='Select the cluster',
+                                                        interactive=False)
                             cluster_cycle = gr.Radio(['Year', 'Diel', 'Linear'], label='Select the cycle')
-
+                        with gr.Row():
+                            submit_btn_occurrences = gr.Button("Generate Barplot", interactive=True)
 
             def display_options(selected_option):
                 if selected_option == 'diel cycle':
@@ -239,7 +245,7 @@ class AcousticAnalyzerApp:
 
             submit_btn.click(self.calculate_plot_whole_year, inputs=[radio_x_axis, radio_groupby, index_select, resolution], outputs=avg_aci_whole)
             submit_btn_2.click(self.call_plot_aci_values_regions, [plot, hue, region_type], acoustic_region_plot)
-            submit_btn_clusters.click(self.kmeans_clustering, [clustering, num_dimensions, clusters_ideal, num_clusters, cluster_indices], clusters_pic)
+            submit_btn_clusters.click(self.kmeans_clustering, [clustering, num_dimensions, clusters_ideal, num_clusters, cluster_indices], outputs=[clusters_pic, which_cluster])
             btn_hierarchical_indices.click(self.hierar_clustering, clustering, outputs=[clusters_pic_hierar])
             submit_fcs.click(self.call_fcs, inputs=[indices_fcs, unit_fcs], outputs=output_fcs)
             submit_cor.click(self.call_cor, inputs=[threshold_cor], outputs=output_cor)
