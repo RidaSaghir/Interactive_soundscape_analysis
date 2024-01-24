@@ -6,6 +6,7 @@ from huggingface_hub import login
 from clustering import ClusteringVisualizer
 from false_color_spec_2 import create_fcs
 from correlation_map import create_cormap
+from cluster_occurrences import cluster_occurrence
 import os
 
 
@@ -32,9 +33,11 @@ class AcousticAnalyzerApp:
     def kmeans_clustering(self, clustering, num_dimensions, clusters_ideal, num_clusters, cluster_indices):
         clusters_pic, self.data_clustered = self.clustering_visualizer.kmeans_clustering(clustering, num_dimensions, cluster_indices, clusters_ideal, num_clusters)
         self.unique_clusters = sorted(self.data_clustered['KMeans_Cluster'].unique())
-        self.cluster_options = [f"Cluster {cluster}" for cluster in self.unique_clusters]
+        print(self.unique_clusters)
+        cluster_options = [f"Cluster {cluster}" for cluster in self.unique_clusters]
+        string_list = [str(element) for element in self.unique_clusters]
+        self.cluster_options = list(zip(cluster_options, string_list))
         print(self.cluster_options)
-
         return clusters_pic, gr.Dropdown(choices=self.cluster_options, interactive=True)
 
     def hierar_clustering(self, clustering):
@@ -42,6 +45,10 @@ class AcousticAnalyzerApp:
 
         #clusters_pic = kmeans_clustering(self.df, cluster_indices, clusters_ideal, num_clusters)
         return clusters_pic_hierar
+
+    def cluster_occur(self, which_cluster, cluster_x_axis, cluster_hue):
+        clusters_bar = cluster_occurrence(self.data_clustered, which_cluster, cluster_x_axis, cluster_hue)
+        return clusters_bar
 
     def upload_file_fcs(self, files):
         self.file_paths_interface_fcs = []
@@ -219,9 +226,12 @@ class AcousticAnalyzerApp:
                         with gr.Row():
                             which_cluster = gr.Dropdown(choices=self.cluster_options, label='Select the cluster',
                                                         interactive=False)
-                            cluster_cycle = gr.Radio(['Year', 'Diel', 'Linear'], label='Select the cycle')
+                            cluster_x_axis = gr.Radio(['Year cycle', 'Diel cycle', 'Linear cycle'], label='Select the range for x axis')
+                            cluster_hue = gr.Radio(['Year', 'Month', 'Day', 'Hour'], label= 'Select the grouping by option')
                         with gr.Row():
                             submit_btn_occurrences = gr.Button("Generate Barplot", interactive=True)
+                        with gr.Row():
+                            clusters_bar = gr.Plot()
 
             def display_options(selected_option):
                 if selected_option == 'diel cycle':
@@ -247,6 +257,7 @@ class AcousticAnalyzerApp:
             submit_btn_2.click(self.call_plot_aci_values_regions, [plot, hue, region_type], acoustic_region_plot)
             submit_btn_clusters.click(self.kmeans_clustering, [clustering, num_dimensions, clusters_ideal, num_clusters, cluster_indices], outputs=[clusters_pic, which_cluster])
             btn_hierarchical_indices.click(self.hierar_clustering, clustering, outputs=[clusters_pic_hierar])
+            submit_btn_occurrences.click(self.cluster_occur, [which_cluster, cluster_x_axis, cluster_hue], clusters_bar)
             submit_fcs.click(self.call_fcs, inputs=[indices_fcs, unit_fcs], outputs=output_fcs)
             submit_cor.click(self.call_cor, inputs=[threshold_cor], outputs=output_cor)
             radio_x_axis.change(display_options, radio_x_axis, disclaimer)
