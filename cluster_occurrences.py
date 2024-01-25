@@ -3,12 +3,12 @@ import plotly.express as px
 
 
 def cluster_occurrence(data_clustered, which_cluster, cluster_x_axis, cluster_hue):
+    data_clustered.to_csv('clustered_data.csv')
     df = data_clustered.copy()  # Make a copy to avoid modifying the original DataFrame
     df['Timestamp'] = pd.to_datetime(df['Timestamp'])  # Convert 'Timestamp' column to datetime type
     df.set_index('Timestamp', inplace=True)  # Set 'Timestamp' as the index
     df = df[['Year', 'Month', 'Week', 'Day', 'Hour', 'Minute', 'KMeans_Cluster']]
     cluster_df = df[df['KMeans_Cluster'] == int(which_cluster)]
-    print(cluster_df)
     if cluster_x_axis == 'Year cycle':
         if cluster_hue == 'Year':
             df_filtered = cluster_df[['Year', 'Month']]
@@ -106,7 +106,8 @@ def cluster_occurrence(data_clustered, which_cluster, cluster_x_axis, cluster_hu
         if cluster_hue == 'Hour':
             df_count = cluster_df.groupby([cluster_df.index.date, cluster_df.index.hour]).size().reset_index(
                 name='Count')
-            df_count['index'] = pd.to_datetime(df_count['index'])
+            print(df_count)
+            df_count['index'] = pd.to_datetime(df_count['level_0'])
             df_count.set_index('index', inplace=True)
             fig = px.bar(df_count, x=df_count.index.date, y='Count', color=df_count.index.hour,
                          labels={'Count': f'Occurrences of Cluster {which_cluster}'},

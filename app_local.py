@@ -7,6 +7,7 @@ from clustering import ClusteringVisualizer
 from false_color_spec_2 import create_fcs
 from correlation_map import create_cormap
 from cluster_occurrences import cluster_occurrence
+from cluster_rose import rose_plots
 import os
 
 
@@ -38,7 +39,7 @@ class AcousticAnalyzerApp:
         string_list = [str(element) for element in self.unique_clusters]
         self.cluster_options = list(zip(cluster_options, string_list))
         print(self.cluster_options)
-        return clusters_pic, gr.Dropdown(choices=self.cluster_options, interactive=True)
+        return clusters_pic, gr.Dropdown(choices=self.cluster_options, interactive=True), gr.Dropdown(choices=self.cluster_options, interactive=True)
 
     def hierar_clustering(self, clustering):
         clusters_pic_hierar = self.clustering_visualizer.hierar_clustering(clustering)
@@ -50,6 +51,9 @@ class AcousticAnalyzerApp:
         clusters_bar = cluster_occurrence(self.data_clustered, which_cluster, cluster_x_axis, cluster_hue)
         return clusters_bar
 
+    def rose_plot(self, which_cluster_r, cluster_hue_r):
+        clusters_rose = rose_plots(self.data_clustered, which_cluster_r, cluster_hue_r)
+        return clusters_rose
     def upload_file_fcs(self, files):
         self.file_paths_interface_fcs = []
         self.file_paths_fcs = []
@@ -220,18 +224,29 @@ class AcousticAnalyzerApp:
                         with gr.Row():
                             #clusters_pic_hierar = gr.Plot(label="Clusters based on hierarchical clustering")
                             clusters_pic_hierar = gr.Image(label="Clusters based on hierarchical clustering")
-                    with gr.Accordion('Cluster Occurrences (Under development)', open=False):
-                        gr.Markdown(
-                            '<span style="color:#575757;font-size:18px">Barplot for cluster occurrences</span>')
-                        with gr.Row():
-                            which_cluster = gr.Dropdown(choices=self.cluster_options, label='Select the cluster',
+                    with gr.Accordion('Cluster Occurrences', open=False):
+                        with gr.Accordion('Bar Plots', open=False):
+                            gr.Markdown(
+                                '<span style="color:#575757;font-size:18px">Barplot for cluster occurrences</span>')
+                            with gr.Row():
+                                which_cluster = gr.Dropdown(choices=self.cluster_options, label='Select the cluster',
+                                                            interactive=False)
+                                cluster_x_axis = gr.Radio(['Year cycle', 'Diel cycle', 'Linear cycle'], label='Select the range for x axis')
+                                cluster_hue = gr.Radio(['Year', 'Month', 'Day', 'Hour'], label= 'Select the grouping by option')
+                            with gr.Row():
+                                submit_btn_occurrences = gr.Button("Generate Barplot", interactive=True)
+                            with gr.Row():
+                                clusters_bar = gr.Plot()
+                        with gr.Accordion('24h Rose Plots', open=False):
+                            which_cluster_r = gr.Dropdown(choices=self.cluster_options, label='Select the cluster',
                                                         interactive=False)
-                            cluster_x_axis = gr.Radio(['Year cycle', 'Diel cycle', 'Linear cycle'], label='Select the range for x axis')
-                            cluster_hue = gr.Radio(['Year', 'Month', 'Day', 'Hour'], label= 'Select the grouping by option')
-                        with gr.Row():
-                            submit_btn_occurrences = gr.Button("Generate Barplot", interactive=True)
-                        with gr.Row():
-                            clusters_bar = gr.Plot()
+                            cluster_hue_r = gr.Radio(['Year', 'Month', 'Day'],
+                                                      label='Select the grouping by option')
+                            with gr.Row():
+                                submit_btn_rose = gr.Button("Generate Rose Plot", interactive=True)
+                            with gr.Row():
+                                clusters_rose = gr.Plot()
+
 
             def display_options(selected_option):
                 if selected_option == 'diel cycle':
@@ -255,9 +270,10 @@ class AcousticAnalyzerApp:
 
             submit_btn.click(self.calculate_plot_whole_year, inputs=[radio_x_axis, radio_groupby, index_select, resolution], outputs=avg_aci_whole)
             submit_btn_2.click(self.call_plot_aci_values_regions, [plot, hue, region_type], acoustic_region_plot)
-            submit_btn_clusters.click(self.kmeans_clustering, [clustering, num_dimensions, clusters_ideal, num_clusters, cluster_indices], outputs=[clusters_pic, which_cluster])
+            submit_btn_clusters.click(self.kmeans_clustering, [clustering, num_dimensions, clusters_ideal, num_clusters, cluster_indices], outputs=[clusters_pic, which_cluster, which_cluster_r])
             btn_hierarchical_indices.click(self.hierar_clustering, clustering, outputs=[clusters_pic_hierar])
             submit_btn_occurrences.click(self.cluster_occur, [which_cluster, cluster_x_axis, cluster_hue], clusters_bar)
+            submit_btn_rose.click(self.rose_plot, [which_cluster_r, cluster_hue_r], clusters_rose)
             submit_fcs.click(self.call_fcs, inputs=[indices_fcs, unit_fcs], outputs=output_fcs)
             submit_cor.click(self.call_cor, inputs=[threshold_cor], outputs=output_cor)
             radio_x_axis.change(display_options, radio_x_axis, disclaimer)
