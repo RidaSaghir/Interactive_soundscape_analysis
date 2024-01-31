@@ -11,7 +11,7 @@ from cluster_rose import rose_plots
 import os
 
 
-csv_file = 'parsed_info.csv'
+csv_file = 'acoustic_indices.csv'
 
 class AcousticAnalyzerApp:
     def __init__(self):
@@ -122,6 +122,22 @@ class AcousticAnalyzerApp:
                     '<span style="color:#575757;font-size:18px">Spectral Activity Index or ACT</span>')
                 gr.Markdown(
                     '<span style="color:#575757;font-size:16px">It corresponds to the portion of the spectrogram above a threshold frequency per frequency along time axis</span>')
+                gr.Markdown(
+                    '<span style="color:#575757;font-size:18px">Event Count Index or EVN</span>')
+                gr.Markdown(
+                    '<span style="color:#575757;font-size:16px">An acoustic event corresponds to the period of the signal above a threshold which in this case is 3dBs.</span>')
+                gr.Markdown(
+                    '<span style="color:#575757;font-size:18px">EAS</span>')
+                gr.Markdown(
+                    '<span style="color:#575757;font-size:16px">Entropy of Average Spectrum.</span>')
+                gr.Markdown(
+                    '<span style="color:#575757;font-size:18px">ECV</span>')
+                gr.Markdown(
+                    '<span style="color:#575757;font-size:16px">Entropy of Coefficient of Variation (along the time axis for each frequency).</span>')
+                gr.Markdown(
+                    '<span style="color:#575757;font-size:18px">EPS</span>')
+                gr.Markdown(
+                    '<span style="color:#575757;font-size:16px">Entropy of spectral maxima (peaks).</span>')
             with gr.Tab('Whole Year Plots'):
                     # Add a descriptive text above the button
                     #dates = gr.CheckboxGroup(label="Data from following dates were found. Select dates to analyse", choices=detect_datasets())
