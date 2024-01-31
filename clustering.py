@@ -25,7 +25,7 @@ class ClusteringVisualizer:
 
         # Iterate through different values of k
         for k in range(2, max_k + 1):
-            kmeans = KMeans(n_clusters=k)
+            kmeans = KMeans(n_clusters=k, n_init=10)
             data.loc[:, 'Cluster'] = kmeans.fit_predict(self.scaled_data)
             #data['Cluster'] = kmeans.fit_predict(scaled_data)
             silhouette_avg = silhouette_score(self.scaled_data, data['Cluster'])
@@ -39,7 +39,7 @@ class ClusteringVisualizer:
 
     def pca(self, num_dim, clusters_ideal, num_clusters):
         # Select only the columns with acoustic indices
-        selected_data = self.data[['ACI', 'ENT', 'EVN', 'LFC', 'MFC', 'HFC', 'EPS']]  # Add other indices as needed
+        selected_data = self.data[['ACI', 'ENT', 'EVN', 'LFC', 'MFC', 'HFC', 'EPS', 'EAS', 'ECV']]  # Add other indices as needed
 
         # Standardize the data
         scaler = StandardScaler()
