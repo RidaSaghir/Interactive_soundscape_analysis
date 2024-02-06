@@ -180,261 +180,63 @@ def plot_aci_values_regions(df, plot, hue, region_type):
 def aci_whole_plot(df, radio_x_axis, radio_groupby, y_var, resolution):
 
     df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format = '%Y/%m/%d %H:%M')
+    df['Time'] = df['Date'].dt.time  # Convert 'Time' to string
+
 
     if radio_x_axis == 'year cycle':
-        fig, ax = plt.subplots(figsize=(12, 6))
 
-        # resolution_mapping = {
-        #     'Monthly': lambda x: x['Date'].dt.month,
-        #     'Weekly': lambda x: x['Date'].dt.month + x['Date'].dt.isocalendar().week / 4,
-        #     'Daily': lambda x: x['Date'].dt.month + x['Date'].dt.isocalendar().week / 4 + x['Date'].dt.day / 31,
-        #     'Hourly': lambda x: x['Date'].dt.month + x['Date'].dt.isocalendar().week / 4 + x['Date'].dt.day / 31 + x['Date'].dt.hour / 744,
-        #     'Minutes': lambda x: x['Date'].dt.month + x['Date'].dt.isocalendar().week / 4 + x['Date'].dt.day / 31 + x['Date'].dt.hour / 744 + x[
-        #         'Date'].dt.minute / 44640
-        # }
-        resolution_mapping = {
-            'Monthly': 'M',
-            'Weekly': 'W',
-            'Daily': 'D',
-            'Hourly': 'H',
-            'Minutes': 'T'
-        }
+        match resolution:
+            case 'Monthly':
+                df['Numeric Time'] = df['Month']
+            case 'Daily':
+                df['Numeric Time'] = df['Month'] + df['Day']/30
+            case 'Hourly':
+                df['Numeric Time'] = df['Month'] + df['Day']/30 + df['Hour']/720
+            case 'Minutes':
+                df['Numeric Time'] = df['Month'] + df['Day'] / 30 + df['Hour'] / 720 + df['Minute']/43200
 
-        if radio_groupby == 'Year':
-            frequency = resolution_mapping.get(resolution)
-            df.set_index('Date', inplace=True)
-            df_filtered = df[[y_var, 'Year', 'Month', 'Week', 'Day', 'Hour', 'Minute']]
-            df_resampled = df_filtered.resample(frequency).mean()
-            fig = px.scatter(df_resampled, x=df_resampled.index.month, y=y_var, color='Year', opacity=0.8, trendline='lowess',
-                             hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True})
-            fig.update_layout(title='{} over Time with {} resolution'.format(y_var,resolution), xaxis_title='Months', yaxis_title='Average {} Value'.format(y_var))
-            # Set custom x-axis ticks for months
-            fig.update_xaxes(
-                tickmode='array',
-                tickvals=list(range(1, 13)),
-                ticktext=calendar.month_abbr[1:13],
-                range = [0, 13]
-            )
-            aci_whole = 'plotly_app.png'
-            fig.write_image(aci_whole, width=1200, height=600)
-            # sns.set(style="whitegrid")
-            # sns.scatterplot(x=df_resampled.index.month, y=y_var, hue='Year', data=df_resampled, palette='viridis', alpha=0.5, ax=ax)
-            # plt.title('{} over Time with {} resolution'.format(y_var, resolution))
-            # plt.xlabel('Months')
-            # plt.ylabel('Average ACI Value')
-            # plt.savefig('abc.png')
-            # plt.show()
+        fig = px.scatter(df, x=df['Numeric Time'], y=y_var, color=radio_groupby, opacity=0.8, trendline='lowess',
+                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True})
+        fig.update_layout(title='{} over Time with {} resolution'.format(y_var,resolution), xaxis_title='Months', yaxis_title='Average {} Value'.format(y_var))
+        # Set custom x-axis ticks for months
+        fig.update_xaxes(
+            tickmode='array',
+            tickvals=list(range(1, 13)),
+            ticktext=calendar.month_abbr[1:13],
+            range = [0, 13]
+        )
+
+    elif radio_x_axis == 'diel cycle':
+        match resolution:
+            case 'Hourly':
+                df['Numeric Time'] = df['Hour']
+            case 'Minutes':
+                df['Numeric Time'] = df['Hour'] + df['Minute'] / 60
+
+        fig = px.scatter(df, x=df['Numeric Time'], y=y_var, color=radio_groupby, opacity=0.8, trendline='lowess',
+                         hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True})
+        fig.update_layout(title='Average ACI over whole day', xaxis_title='Hours',
+                          yaxis_title='Average {} Value'.format(y_var))
+
+        fig.update_xaxes(
+            tickmode='array',
+            tickvals=df['Hour'],
+            range=[0, 24]
+        )
 
 
-        if radio_groupby == 'Month':
-
-            frequency = resolution_mapping.get(resolution)
-            df.set_index('Date', inplace=True)
-            df_filtered = df[[y_var, 'Year', 'Month', 'Week', 'Day', 'Hour', 'Minute']]
-            df_resampled = df_filtered.resample(frequency).mean()
-
-            fig = px.scatter(df_resampled, x=df_resampled.index.month, y=y_var, color='Month', opacity=0.8, trendline='lowess',
-                             hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True})
-            fig.update_layout(title='{} over Time with {} resolution'.format(y_var,resolution), xaxis_title='Months', yaxis_title='Average {} Value'.format(y_var))
-            # Set custom x-axis ticks for months
-            fig.update_xaxes(
-                tickmode='array',
-                tickvals=list(range(1, 13)),
-                ticktext=calendar.month_abbr[1:13],
-                range = [0, 13]
-            )
-            aci_whole = 'plotly_app.png'
-            fig.write_image(aci_whole, width=1200, height=600)
-            # sns.set(style="whitegrid")
-            # sns.scatterplot(x=df_resampled.index.month, y=y_var, hue='Month', data=df_resampled, palette='viridis', alpha=0.8, ax=ax)
-            # plt.title('{} over Time with {} resolution'.format(y_var, resolution))
-            # plt.xlabel('Months')
-            # plt.ylabel('Average ACI Value')
-
-        if radio_groupby == 'Week':
-
-            frequency = resolution_mapping.get(resolution)
-            df.set_index('Date', inplace=True)
-            df_filtered = df[[y_var, 'Year', 'Month', 'Week', 'Day', 'Hour', 'Minute']]
-            df_resampled = df_filtered.resample(frequency).mean()
-            fig = px.scatter(df_resampled, x=df_resampled.index.month, y=y_var, color='Week', opacity=0.8, trendline='lowess',
-                             hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True})
-            fig.update_layout(title='{} over Time with {} resolution'.format(y_var,resolution), xaxis_title='Months', yaxis_title='Average {} Value'.format(y_var))
-            # Set custom x-axis ticks for months
-            fig.update_xaxes(
-                tickmode='array',
-                tickvals=list(range(1, 13)),
-                ticktext=calendar.month_abbr[1:13],
-                range = [0, 13]
-            )
-            aci_whole = 'plotly_app.png'
-            fig.write_image(aci_whole, width=1200, height=600)
-            # sns.set(style="whitegrid")
-            # sns.scatterplot(x=df_resampled.index.month, y=y_var, hue='Week', data=df_resampled, palette='viridis', alpha=0.8, ax=ax)
-            # plt.title('{} over Time with {} resolution'.format(y_var, resolution))
-            # plt.xlabel('Months')
-            # plt.ylabel('Average ACI Value')
-
-        if radio_groupby == 'Day':
-
-            frequency = resolution_mapping.get(resolution)
-            df.set_index('Date', inplace=True)
-            df_filtered = df[[y_var, 'Year', 'Month', 'Week', 'Day', 'Hour', 'Minute']]
-            df_resampled = df_filtered.resample(frequency).mean()
-            fig = px.scatter(df_resampled, x=df_resampled.index.month, y=y_var, color='Day', opacity=0.8, trendline='lowess',
-                             hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True})
-            fig.update_layout(title='{} over Time with {} resolution'.format(y_var,resolution), xaxis_title='Months', yaxis_title='Average {} Value'.format(y_var))
-            # Set custom x-axis ticks for months
-            fig.update_xaxes(
-                tickmode='array',
-                tickvals=list(range(1, 13)),
-                ticktext=calendar.month_abbr[1:13],
-                range = [0, 13]
-            )
-            aci_whole = 'plotly_app.png'
-            fig.write_image(aci_whole, width=1200, height=600)
-            # sns.set(style="whitegrid")
-            # sns.scatterplot(x=df_resampled.index.month, y=y_var, hue='Day', data=df_resampled, palette='viridis',
-            #                 alpha=0.8, ax=ax)
-            # plt.title('{} over Time with {} resolution'.format(y_var, resolution))
-            # plt.xlabel('Months')
-            # plt.ylabel('Average ACI Value')
-
-    if radio_x_axis == 'diel cycle':
-        resolution_mapping = {
-            'Hourly': lambda x: x['Date'].dt.hour,
-            'Minutes': lambda x: x['Date'].dt.hour + x['Date'].dt.minute / 60 #60 minutes in an hour
-        }
-        df['Time'] = df['Date'].dt.time  # Convert 'Time' to string
-        df['Numeric_Time'] = df['Time'].apply(lambda x: x.hour + x.minute / 60)
-        df.set_index('Date', inplace=True)
-        if resolution == 'Hourly':
-            x = 'Hour'
-        if resolution == 'Minutes':
-            x = 'Numeric_Time'
-        if radio_groupby == 'Year':
-            df_filtered = df[[y_var, 'Year', 'Month', 'Week', 'Day', 'Hour', 'Minute', 'Numeric_Time']]
-            fig = px.scatter(df_filtered, x=x, y=y_var, color='Year', opacity=0.8, trendline='lowess',
-                             hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True})
-            fig.update_layout(title='Average ACI over whole day', xaxis_title='Hours',
-                              yaxis_title='Average {} Value'.format(y_var))
-
-            fig.update_xaxes(
-                tickmode='array',
-                tickvals=df['Hour'],
-                range=[0, 24]
-            )
-            aci_whole = 'plotly_app.png'
-            fig.write_image(aci_whole, width=1200, height=600)
-        if radio_groupby == 'Month':
-            df_filtered = df[[y_var, 'Year', 'Month', 'Week', 'Day', 'Hour', 'Minute', 'Numeric_Time']]
-            fig = px.scatter(df_filtered, x=x, y=y_var, color='Month', opacity=0.8, trendline='lowess',
-                             hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True})
-            fig.update_layout(title='Average ACI over whole day', xaxis_title='Hours',
-                              yaxis_title='Average {} Value'.format(y_var))
-
-            fig.update_xaxes(
-                tickmode='array',
-                tickvals=df['Hour'],
-                range=[0, 24]
-            )
-            aci_whole = 'plotly_app.png'
-            fig.write_image(aci_whole, width=1200, height=600)
-
-        if radio_groupby == 'Week':
-            df_filtered = df[[y_var, 'Year', 'Month', 'Week', 'Day', 'Hour', 'Minute', 'Numeric_Time']]
-            fig = px.scatter(df_filtered, x=x, y=y_var, color='Week', opacity=0.8, trendline='lowess',
-                             hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True})
-            fig.update_layout(title='Average ACI over whole day', xaxis_title='Hours',
-                              yaxis_title='Average {} Value'.format(y_var))
-
-            fig.update_xaxes(
-                tickmode='array',
-                tickvals=df['Hour'],
-                range=[0, 24]
-            )
-            aci_whole = 'plotly_app.png'
-            fig.write_image(aci_whole, width=1200, height=600)
-
-
-        if radio_groupby == 'Day':
-            df_filtered = df[[y_var, 'Year', 'Month', 'Week', 'Day', 'Hour', 'Minute', 'Numeric_Time']]
-            fig = px.scatter(df_filtered, x=x, y=y_var, color='Day', opacity=0.8, trendline='lowess',
-                             hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True})
-            fig.update_layout(title='Average ACI over whole day', xaxis_title='Hours',
-                              yaxis_title='Average {} Value'.format(y_var))
-
-            fig.update_xaxes(
-                tickmode='array',
-                tickvals=df['Hour'],
-                range=[0, 24]
-            )
-            aci_whole = 'plotly_app.png'
-            fig.write_image(aci_whole, width=1200, height=600)
-
-    if radio_x_axis == 'linear':
+    elif radio_x_axis == 'linear':
         resolution_mapping = lambda resolution: 'Y' if resolution == 'Yearly' else 'M' if resolution == 'Monthly' else 'W' if resolution == 'Weekly' else 'D' if resolution == 'Daily' else 'H' if resolution == 'Hourly' else 'T' if resolution == 'Minutes' else None
-        fig, ax = plt.subplots(figsize=(12, 6))
+        resolution_x = resolution_mapping(resolution)
+        df.set_index('Date', inplace=True)
+        df_filtered = df[[y_var, 'Year', 'Month', 'Week', 'Day', 'Hour', 'Minute']]
+        df_resampled = df_filtered.resample(resolution_x).mean().reset_index()
+        fig = px.scatter(df_resampled, x='Date', y=y_var, color=radio_groupby, opacity=0.8, trendline='lowess',
+                         hover_data={'Year': True, 'Month': True, 'Week': True, 'Day': True, 'Hour': True})
+        fig.update_layout(title='{} over Time with {} resolution'.format(y_var,resolution), xaxis_title='Linear', yaxis_title='Average {} Value'.format(y_var))
 
-        if radio_groupby == 'Year':
-            resolution_x = resolution_mapping(resolution)
-            df.set_index('Date', inplace=True)
-            df_filtered = df[[y_var, 'Year', 'Month', 'Week', 'Day', 'Hour', 'Minute']]
-            df_resampled = df_filtered.resample(resolution_x).mean().reset_index()
-            fig = px.scatter(df_resampled, x='Date', y=y_var, color='Year', opacity=0.8, trendline='lowess',
-                             hover_data={'Year': True, 'Month': True, 'Week': True, 'Day': True, 'Hour': True})
-            fig.update_layout(title='{} over Time with {} resolution'.format(y_var,resolution), xaxis_title='Linear', yaxis_title='Average {} Value'.format(y_var))
-            aci_whole = 'plotly_app.png'
-            fig.write_image(aci_whole, width=1200, height=600)
-            # sns.scatterplot(x='Date', y=y_var, hue='Year', data=df_resampled, palette='viridis', alpha=0.8, ax=ax)
-            # plt.title('{} over Time with {} resolution'.format(y_var, resolution))
-            # plt.xlabel('Linear')
-            # plt.ylabel('Average ACI Value')
+    aci_whole = 'plotly_app.png'
+    fig.write_image(aci_whole, width=1200, height=600)
 
-
-        if radio_groupby == 'Month':
-            resolution_x = resolution_mapping(resolution)
-            df.set_index('Date', inplace=True)
-            df_filtered = df[[y_var, 'Year', 'Month', 'Week', 'Day', 'Hour', 'Minute']]
-            df_resampled = df_filtered.resample(resolution_x).mean().reset_index()
-            fig = px.scatter(df_resampled, x='Date', y=y_var, color='Month', opacity=0.8, trendline='lowess',hover_data={'Year': True, 'Month': True, 'Week': True, 'Day': True, 'Hour': True, 'Minute': True})
-            fig.update_layout(title='{} over Time with {} resolution'.format(y_var,resolution), xaxis_title='Linear', yaxis_title='Average {} Value'.format(y_var))
-            aci_whole = 'plotly_app.png'
-            fig.write_image(aci_whole, width=1200, height=600)
-            # sns.scatterplot(x='Date', y=y_var, hue='Month', data=df_resampled, palette='viridis', alpha=0.8, ax=ax)
-            # plt.title('{} over Time with {} resolution'.format(y_var, resolution))
-            # plt.xlabel('Linear')
-            # plt.ylabel('Average ACI Value')
-
-        if radio_groupby == 'Week':
-            resolution_x = resolution_mapping(resolution)
-            df.set_index('Date', inplace=True)
-            df_filtered = df[[y_var, 'Year', 'Month', 'Week', 'Day', 'Hour', 'Minute']]
-            df_resampled = df_filtered.resample(resolution_x).mean().reset_index()
-            fig = px.scatter(df_resampled, x='Date', y=y_var, color='Week', opacity=0.8, trendline='lowess',hover_data={'Year': True, 'Month': True, 'Week': True, 'Day': True, 'Hour': True, 'Minute': True})
-            fig.update_layout(title='{} over Time with {} resolution'.format(y_var,resolution), xaxis_title='Linear', yaxis_title='Average {} Value'.format(y_var))
-            aci_whole = 'plotly_app.png'
-            fig.write_image(aci_whole, width=1200, height=600)
-            # sns.scatterplot(x='Date', y=y_var, hue='Week', data=df_resampled, palette='viridis', alpha=0.8, ax=ax)
-            # plt.title('{} over Time with {} resolution'.format(y_var, resolution))
-            # plt.xlabel('Linear')
-            # plt.ylabel('Average ACI Value')
-
-
-
-        if radio_groupby == 'Day':
-            resolution_x = resolution_mapping(resolution)
-            df.set_index('Date', inplace=True)
-            df_filtered = df[[y_var, 'Year', 'Month', 'Week', 'Day', 'Hour', 'Minute']]
-            df_resampled = df_filtered.resample(resolution_x).mean().reset_index()
-            fig = px.scatter(df_resampled, x='Date', y=y_var, color='Day', opacity=0.8, trendline='lowess',hover_data={'Year': True, 'Month': True, 'Week': True, 'Day': True, 'Hour': True, 'Minute': True})
-            fig.update_layout(title='{} over Time with {} resolution'.format(y_var,resolution), xaxis_title='Linear', yaxis_title='Average {} Value'.format(y_var))
-            aci_whole = 'plotly_app.png'
-            fig.write_image(aci_whole, width=1200, height=600)
-            # sns.scatterplot(x='Date', y=y_var, hue='Day', data=df_resampled, palette='viridis', alpha=0.8, ax=ax)
-            #
-            # plt.title('{} over Time with {} resolution'.format(y_var, resolution))
-            # plt.xlabel('Linear')
-            # plt.ylabel('Average ACI Value')
 
     return fig
