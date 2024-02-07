@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import plotly.express as px
+import plotly.graph_objects as go
 import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans, AgglomerativeClustering
@@ -13,31 +14,40 @@ class ClusteringVisualizer:
         self.data = data
         self.scaled_data = []
         self.optimal_clusters = None
+        self.sil_score = None
         self.df_pca = []
 
-    def find_optimal_clusters(self, data, max_k=10):
+    def find_optimal_clusters(self, data, max_clusters):
+        max_k = int(max_clusters)
         # Standardize the data
         scaler = StandardScaler()
         self.scaled_data = scaler.fit_transform(data)
         # Initialize variables to store the best Silhouette score and the corresponding k
         best_score = -1
         best_k = 0
+        silhouette_scores = []
 
         # Iterate through different values of k
-        for k in range(2, max_k + 1):
+        k_values = list(range(2, max_k + 1))  # Convert range object to a list
+
+        for k in k_values:
             kmeans = KMeans(n_clusters=k, n_init=10)
             data.loc[:, 'Cluster'] = kmeans.fit_predict(self.scaled_data)
-            #data['Cluster'] = kmeans.fit_predict(scaled_data)
             silhouette_avg = silhouette_score(self.scaled_data, data['Cluster'])
+            silhouette_scores.append(silhouette_avg)
 
             # Check if the current k has a better Silhouette score
             if silhouette_avg > best_score:
                 best_score = silhouette_avg
                 best_k = k
 
-        return best_k
+        fig = px.line(x=k_values, y=silhouette_scores, markers=True,
+                      labels={'x': 'Number of clusters (k)', 'y': 'Silhouette Score'},
+                      title='Silhouette Score vs. Number of Clusters')
 
-    def pca(self, num_dim, clusters_ideal, num_clusters):
+        return best_k, fig
+
+    def pca(self, num_dim, clusters_ideal, num_clusters, max_clusters):
         # Select only the columns with acoustic indices
         selected_data = self.data[['ACI', 'ENT', 'EVN', 'LFC', 'MFC', 'HFC', 'EPS', 'EAS', 'ECV']]  # Add other indices as needed
 
@@ -53,21 +63,19 @@ class ClusteringVisualizer:
         self.df_pca = pd.DataFrame(data=principal_components, columns=columns)
         optimal_clusters = 1
         if clusters_ideal == 'Get optimum number of clusters':
-            self.optimal_clusters = self.find_optimal_clusters(selected_data)
-        elif clusters_ideal == 'Choose random number of clusters':
+            self.optimal_clusters, self.sil_score = self.find_optimal_clusters(selected_data, max_clusters)
+        elif clusters_ideal == 'Choose the number of clusters':
             self.optimal_clusters = num_clusters
 
         # Concatenate the original DataFrame with the new DataFrame
         result_df = pd.concat([self.data[['File', 'Timestamp']], self.df_pca], axis=1)
         result_df.to_csv('result_df.csv')
-        return self.df_pca, selected_data, result_df, columns, self.optimal_clusters
-
-
-    def kmeans_clustering(self, clustering, num_dim, columns, clusters_ideal, num_clusters):
+        return self.df_pca, selected_data, result_df, columns, self.optimal_clusters, self.sil_score
+    def kmeans_clustering(self, clustering, num_dim, columns, clusters_ideal, num_clusters, max_clusters):
 
         if clustering == 'pca':
             # This dict includes filename, timestamp, and PC columns
-            self.df_pca, selected_data, result_df, columns, self.optimal_clusters = self.pca(num_dim, clusters_ideal, num_clusters)
+            self.df_pca, selected_data, result_df, columns, self.optimal_clusters, self.sil_score = self.pca(num_dim, clusters_ideal, num_clusters, max_clusters)
             # Apply K-Means clustering
             kmeans = KMeans(n_clusters=self.optimal_clusters)
             self.data['KMeans_Cluster'] = kmeans.fit_predict(self.df_pca)
@@ -99,8 +107,8 @@ class ClusteringVisualizer:
 
             optimal_clusters = 1
             if clusters_ideal == 'Get optimum number of clusters':
-                self.optimal_clusters = self.find_optimal_clusters(selected_data)
-            elif clusters_ideal == 'Choose random number of clusters':
+                self.optimal_clusters, self.sil_score = self.find_optimal_clusters(selected_data, max_clusters)
+            elif clusters_ideal == 'Choose the number of clusters':
                 self.optimal_clusters = num_clusters
 
             # Apply K-Means clustering
@@ -130,7 +138,7 @@ class ClusteringVisualizer:
                 title='K-Means Clustering'
             )
 
-        return fig, self.data
+        return fig, self.data, self.sil_score
 
     def hierar_clustering(self, clustering):
         # Apply hierarchical clustering

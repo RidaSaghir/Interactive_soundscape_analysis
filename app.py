@@ -31,15 +31,15 @@ class AcousticAnalyzerApp:
         acoustic_region_plot = plot_aci_values_regions(self.df, plot, hue, region_type)
         return acoustic_region_plot
 
-    def kmeans_clustering(self, clustering, num_dimensions, clusters_ideal, num_clusters, cluster_indices):
-        clusters_pic, self.data_clustered = self.clustering_visualizer.kmeans_clustering(clustering, num_dimensions, cluster_indices, clusters_ideal, num_clusters)
+    def kmeans_clustering(self, clustering, num_dimensions, clusters_ideal, num_clusters, cluster_indices, max_clusters):
+        clusters_pic, self.data_clustered, sil_score = self.clustering_visualizer.kmeans_clustering(clustering, num_dimensions, cluster_indices, clusters_ideal, num_clusters, max_clusters)
         self.unique_clusters = sorted(self.data_clustered['KMeans_Cluster'].unique())
         print(self.unique_clusters)
         cluster_options = [f"Cluster {cluster}" for cluster in self.unique_clusters]
         string_list = [str(element) for element in self.unique_clusters]
         self.cluster_options = list(zip(cluster_options, string_list))
         print(self.cluster_options)
-        return clusters_pic, gr.Dropdown(choices=self.cluster_options, interactive=True), gr.Dropdown(choices=self.cluster_options, interactive=True)
+        return clusters_pic, sil_score, gr.Dropdown(choices=self.cluster_options, interactive=True), gr.Dropdown(choices=self.cluster_options, interactive=True)
 
     def hierar_clustering(self, clustering):
         clusters_pic_hierar = self.clustering_visualizer.hierar_clustering(clustering)
@@ -224,8 +224,10 @@ class AcousticAnalyzerApp:
                                                        ('Use principal component analysis on acoustic indices', 'pca')],
                                                        label="How to cluster?")
                                 with gr.Column() as output_col:
-                                    clusters_ideal = gr.Radio(['Choose own choice of number of clusters', 'Get optimum number of clusters'], label="How to chose number of clusters", interactive=True,
-                                                              visible=True)
+                                    with gr.Row():
+                                        clusters_ideal = gr.Radio(['Choose the number of clusters', 'Get optimum number of clusters'], label="How to chose number of clusters", interactive=True,
+                                                                  visible=True)
+                                        max_clusters = gr.Textbox(label='Enter the maximum number of clusters to find optimum number of clusters from.', visible=False)
                                     num_clusters = gr.Slider(minimum=1, maximum=10, value=2, step=1,
                                                               label="Select the number of clusters", interactive=True, visible=True)
                                     cluster_indices = gr.CheckboxGroup(['ACI', 'ENT', 'EVN', 'ECV', 'EAS', 'LFC', 'HFC', 'MFC', 'EPS'], label= 'Choose the parameters for clustering',
@@ -233,7 +235,9 @@ class AcousticAnalyzerApp:
                                     num_dimensions = gr.Slider(minimum=1, maximum=10, value=2, step=1,
                                                               label="Select the number of dimensions for PCA", interactive=True, visible=False)
                             submit_btn_clusters =gr.Button('Plot Clusters', interactive=True)
-                            clusters_pic =  gr.Plot(label="Clusters based on k-means")
+                            with gr.Row():
+                                clusters_pic =  gr.Plot(label="Clusters based on k-means")
+                                sil_score = gr.Plot(label="Best number of clusters based on Silhouette Scores", visible=False)
                     with gr.Accordion('Hierarchical Clustering', open=False):
                         with gr.Row():
                             btn_hierarchical_indices = gr.Button("Perform hierarchical clustering", interactive=True)
@@ -280,13 +284,17 @@ class AcousticAnalyzerApp:
 
             def ideal_clustering(clusters_ideal):
                 if clusters_ideal == 'Get optimum number of clusters':
-                    return gr.Slider(visible=False)
+                    return {num_clusters: gr.Slider(visible=False),
+                            sil_score: gr.Image(visible=True),
+                            max_clusters: gr.Textbox(visible=True)}
                 else:
-                    return gr.Slider(visible=True)
+                    return {num_clusters: gr.Slider(visible=True),
+                            sil_score: gr.Image(visible=False),
+                            max_clusters: gr.Textbox(visible=False)}
 
             submit_btn.click(self.calculate_plot_whole_year, inputs=[radio_x_axis, radio_groupby, index_select, resolution], outputs=avg_aci_whole)
             submit_btn_2.click(self.call_plot_aci_values_regions, [plot, hue, region_type], acoustic_region_plot)
-            submit_btn_clusters.click(self.kmeans_clustering, [clustering, num_dimensions, clusters_ideal, num_clusters, cluster_indices], outputs=[clusters_pic, which_cluster, which_cluster_r])
+            submit_btn_clusters.click(self.kmeans_clustering, [clustering, num_dimensions, clusters_ideal, num_clusters, cluster_indices, max_clusters], outputs=[clusters_pic, sil_score, which_cluster, which_cluster_r])
             btn_hierarchical_indices.click(self.hierar_clustering, clustering, outputs=[clusters_pic_hierar])
             submit_btn_occurrences.click(self.cluster_occur, [which_cluster, cluster_x_axis, cluster_hue], clusters_bar)
             submit_btn_rose.click(self.rose_plot, [which_cluster_r, cluster_hue_r], clusters_rose)
@@ -294,7 +302,7 @@ class AcousticAnalyzerApp:
             submit_cor.click(self.call_cor, inputs=[threshold_cor], outputs=output_cor)
             radio_x_axis.change(display_options, radio_x_axis, disclaimer)
             clustering.change(clustering_options, clustering, [cluster_indices, num_dimensions])
-            clusters_ideal.change(ideal_clustering, clusters_ideal, num_clusters)
+            clusters_ideal.change(ideal_clustering, clusters_ideal, outputs=[num_clusters, sil_score, max_clusters])
             upload_fcs.upload(self.upload_file_fcs, upload_fcs, file_output_fcs)
             upload_cor.upload(self.upload_file_cor, upload_cor, file_output_cor)
 
