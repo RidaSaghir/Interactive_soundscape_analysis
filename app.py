@@ -8,6 +8,7 @@ from false_color_spec_2 import create_fcs
 from correlation_map import create_cormap
 from cluster_occurrences import cluster_occurrence
 from cluster_rose import rose_plots
+from acoustic_region import acoustic_regions
 import os
 
 
@@ -26,6 +27,22 @@ class AcousticAnalyzerApp:
     def calculate_plot_whole_year(self, radio_x_axis, radio_groupby, index_select, resolution):
         avg_aci_whole = aci_whole_plot(self.df, radio_x_axis, radio_groupby, index_select, resolution)
         return avg_aci_whole
+
+    def upload_file_reg(self, file):
+        self.file_paths_interface_reg = []
+        self.file_paths_reg = []
+        #for file in files:
+        self.file_paths_interface_reg.append(file.name)
+        self.file_paths_reg.append(os.path.basename(file.name))
+        return self.file_paths_interface_reg
+    def acoustic_reg(self):
+        spect, reg = acoustic_regions(self.file_paths_interface_reg)
+        print(reg)
+        regions = []
+        for item in reg[0]:
+            regions.append(f"Acoustic Region {item}")
+
+        return spect, gr.Radio(choices=regions)
 
     def call_plot_aci_values_regions(self, plot, hue, region_type):
         acoustic_region_plot = plot_aci_values_regions(self.df, plot, hue, region_type)
@@ -199,6 +216,20 @@ class AcousticAnalyzerApp:
                         with gr.Row():
                             # output_cor = gr.Image(label="Correlation Map", type="pil")
                             output_cor = gr.Plot(label="Correlation Map")
+                    with gr.Accordion('Acoustic Region Evaluation', open=False):
+                        with gr.Row():
+                            upload_region = gr.UploadButton("Click to upload your file", file_types=["audio"], file_count="single")
+                            file_output_reg = gr.File(visible=True)
+                            submit_reg = gr.Button(label ='Evaluate', interactive=True)
+                        with gr.Row():
+                            spect = gr.Image(label="Spectrogram")
+                            regions_found = gr.Radio([], label= 'Acoustic Regions found in the audio file. Click to evaluate.', interactive=True)
+                        with gr.Row():
+                            with gr.Column():
+                                spect_roi = gr.Image(label="Spectrogram with ROIs")
+                            with gr.Column():
+                                rois_found = gr.Radio([], label= 'ROIs found in the audio file. Click to listen.')
+                                roi_audio = gr.Audio()
 
                     with gr.Accordion('Acoustic indices plot according to region', open=False):
                         region_type = gr.CheckboxGroup(
@@ -210,6 +241,7 @@ class AcousticAnalyzerApp:
                         with gr.Row():
                             hue = gr.Radio(["Years on x-axis", "Regions on x-axis"], label='Select the plot settings')
                             plot = gr.Radio(["Bar plot", "Time series plot"], label='Select the type of plot')
+
                         submit_btn_2 = gr.Button("Plot according to regions")
                         with gr.Column():
                             # Create Gradio blocks for outputs
@@ -293,6 +325,8 @@ class AcousticAnalyzerApp:
                             max_clusters: gr.Textbox(visible=False)}
 
             submit_btn.click(self.calculate_plot_whole_year, inputs=[radio_x_axis, radio_groupby, index_select, resolution], outputs=avg_aci_whole)
+            upload_region.upload(self.upload_file_reg, upload_region, file_output_reg)
+            submit_reg.click(self.acoustic_reg, outputs=[spect, regions_found])
             submit_btn_2.click(self.call_plot_aci_values_regions, [plot, hue, region_type], acoustic_region_plot)
             submit_btn_clusters.click(self.kmeans_clustering, [clustering, num_dimensions, clusters_ideal, num_clusters, cluster_indices, max_clusters], outputs=[clusters_pic, sil_score, which_cluster, which_cluster_r])
             btn_hierarchical_indices.click(self.hierar_clustering, clustering, outputs=[clusters_pic_hierar])
