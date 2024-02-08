@@ -30,14 +30,16 @@ class ClusteringVisualizer:
 
         for k in k_values:
             kmeans = KMeans(n_clusters=k, n_init=10)
-            data.loc[:, 'Cluster'] = kmeans.fit_predict(data)
-            silhouette_avg = silhouette_score(data, data['Cluster'])
+            #data.loc[:, 'Cluster'] = kmeans.fit_predict(data)
+            cluster_labels = kmeans.fit_predict(self.df_pca)
+            silhouette_avg = silhouette_score(data, cluster_labels)
             silhouette_scores.append(silhouette_avg)
 
             # Check if the current k has a better Silhouette score
             if silhouette_avg > best_score:
                 best_score = silhouette_avg
                 best_k = k
+                self.optimal_clusters = k
 
         fig = px.line(x=k_values, y=silhouette_scores, markers=True,
                       labels={'x': 'Number of clusters (k)', 'y': 'Silhouette Score'},
