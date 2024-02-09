@@ -54,3 +54,36 @@ def acoustic_regions(files):
             regions.append(region_found)
 
     return fig, regions
+
+def acoustic_reg_roi(region, file):
+    numeric_value = re.findall(r'\d+', region)
+    print(numeric_value)
+    s, fs = sound.load(file[0])
+    fig, ax = plt.subplots(figsize=(10, 5))
+
+    if (numeric_value[0] in ['4', '8', '12', '16', '20']):
+        df_trill = find_rois_cwt(s, fs, flims=(7906, 11000), tlen=2, th=0, display=True, figsize=(10, 6))
+        plt.show()
+        a = 'roi.png'
+        plt.savefig(a)
+
+    elif (numeric_value[0] in ['3' or '7' or '11' or '15' or '19']):
+        df_trill = find_rois_cwt(s, fs, flims=(3609, 7906), tlen=2, th=0, display=True, figsize=(10, 6))
+        plt.show()
+        a = 'roi.png'
+        plt.savefig(a)
+
+    elif (numeric_value[0] in ['2' or '6' or '10' or '14' or '18']):
+        df_trill = find_rois_cwt(s, fs, flims=(988, 3609), tlen=2, th=0, display=True, figsize=(10, 6))
+        plt.show()
+        a = 'roi.png'
+        plt.savefig(a)
+
+    elif (numeric_value[0] in ['1' or '5' or '9' or '13' or '17']):
+        # 0.5 because the function expects values greater than 0
+        df_trill = find_rois_cwt(s, fs, flims=(0.1, 988), tlen=2, th=0, display=True, figsize=(10, 6))
+        plt.show()
+        a = 'roi.png'
+        plt.savefig(a)
+
+    return a
