@@ -8,7 +8,7 @@ from false_color_spec_2 import create_fcs
 from correlation_map import create_cormap
 from cluster_occurrences import cluster_occurrence
 from cluster_rose import rose_plots
-from acoustic_region import acoustic_regions
+from acoustic_region import AcousticRegionAnalyzer
 import os
 
 
@@ -20,6 +20,7 @@ class AcousticAnalyzerApp:
         self.file_paths_interface_fcs = []
         self.df = pd.read_csv(csv_file)
         self.clustering_visualizer = ClusteringVisualizer(self.df)
+        self.acoustic_analyzer = AcousticRegionAnalyzer()
         self.data_clustered = []
         self.unique_clusters = []
         self.cluster_options = []
@@ -36,13 +37,19 @@ class AcousticAnalyzerApp:
         self.file_paths_reg.append(os.path.basename(file.name))
         return self.file_paths_interface_reg
     def acoustic_reg(self):
-        spect, reg = acoustic_regions(self.file_paths_interface_reg)
-        print(reg)
+        spect, reg = self.acoustic_analyzer.acoustic_regions(self.file_paths_interface_reg)
         regions = []
         for item in reg[0]:
             regions.append(f"Acoustic Region {item}")
-
         return spect, gr.Radio(choices=regions)
+
+    def acoustic_roi(self, region):
+        spect_roi, rois_num = self.acoustic_analyzer.acoustic_reg_roi(region, self.file_paths_interface_reg)
+        return spect_roi, gr.Radio(choices=rois_num)
+
+    def roi_audio(self, rois_found):
+        roi_audio = self.acoustic_analyzer.roi_play(rois_found)
+        return roi_audio
 
     def call_plot_aci_values_regions(self, plot, hue, region_type):
         acoustic_region_plot = plot_aci_values_regions(self.df, plot, hue, region_type)
@@ -228,7 +235,7 @@ class AcousticAnalyzerApp:
                             with gr.Column():
                                 spect_roi = gr.Image(label="Spectrogram with ROIs")
                             with gr.Column():
-                                rois_found = gr.Radio([], label= 'ROIs found in the audio file. Click to listen.')
+                                rois_found = gr.Radio([], label= 'ROIs found in the audio file. Click to listen.', interactive=True)
                                 roi_audio = gr.Audio()
 
                     with gr.Accordion('Acoustic indices plot according to region', open=False):
@@ -327,6 +334,8 @@ class AcousticAnalyzerApp:
             submit_btn.click(self.calculate_plot_whole_year, inputs=[radio_x_axis, radio_groupby, index_select, resolution], outputs=avg_aci_whole)
             upload_region.upload(self.upload_file_reg, upload_region, file_output_reg)
             submit_reg.click(self.acoustic_reg, outputs=[spect, regions_found])
+            regions_found.change(self.acoustic_roi, regions_found, outputs=[spect_roi, rois_found])
+            rois_found.change(self.roi_audio, rois_found, outputs=[roi_audio])
             submit_btn_2.click(self.call_plot_aci_values_regions, [plot, hue, region_type], acoustic_region_plot)
             submit_btn_clusters.click(self.kmeans_clustering, [clustering, num_dimensions, clusters_ideal, num_clusters, cluster_indices, max_clusters], outputs=[clusters_pic, sil_score, which_cluster, which_cluster_r])
             btn_hierarchical_indices.click(self.hierar_clustering, clustering, outputs=[clusters_pic_hierar])
