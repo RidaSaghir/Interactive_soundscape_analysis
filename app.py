@@ -26,6 +26,8 @@ class AcousticAnalyzerApp:
         self.cluster_options = []
 
     def calculate_plot_whole_year(self, radio_x_axis, radio_groupby, index_select, resolution):
+        if radio_groupby not in self.df:
+            raise gr.Error('Cluster information has not been updated yet. Please perform clustering from the tab named "Clustering"')
         avg_aci_whole = aci_whole_plot(self.df, radio_x_axis, radio_groupby, index_select, resolution)
         return avg_aci_whole
 
@@ -62,7 +64,6 @@ class AcousticAnalyzerApp:
         cluster_options = [f"Cluster {cluster}" for cluster in self.unique_clusters]
         string_list = [str(element) for element in self.unique_clusters]
         self.cluster_options = list(zip(cluster_options, string_list))
-        print(self.cluster_options)
         return clusters_pic, sil_score, gr.Dropdown(choices=self.cluster_options, interactive=True), gr.Dropdown(choices=self.cluster_options, interactive=True)
 
     def hierar_clustering(self, clustering):
@@ -178,7 +179,7 @@ class AcousticAnalyzerApp:
                     with gr.Row():
                         radio_x_axis = gr.Radio(["year cycle", "diel cycle", "linear"],
                                                 label="Select the range for x axis for plotting the values")
-                        radio_groupby = gr.Radio(["Year", "Month", "Week", "Day"],
+                        radio_groupby = gr.Radio(["Year", "Month", "Week", "Day", ("Cluster", "KMeans_Cluster")],
                                                  label="Select the grouping (hue) for plotting the values")
                     with gr.Row():
                         disclaimer = gr.Text(value="With this option, there could be only 2 resolutions possible i.e 'Hourly' and 'Minutes'", label="Note:", visible=False)
@@ -351,8 +352,8 @@ class AcousticAnalyzerApp:
 
 
         if __name__ == "__main__":
-            demo.launch(server_name='0.0.0.0', server_port=7860)
-            #demo.launch()
+            #demo.launch(server_name='0.0.0.0', server_port=7860)
+            demo.launch()
 
 
 app = AcousticAnalyzerApp()
