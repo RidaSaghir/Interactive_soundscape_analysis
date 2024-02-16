@@ -1,12 +1,16 @@
-import numpy as np
 import plotly.express as px
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
 import ast
-from datetime import datetime
 import calendar
+import os
+import json
 
+config_file_path = os.path.join(os.path.dirname(__file__), 'config.json')
+with open(config_file_path) as config_file:
+    config = json.load(config_file)
+
+path_data = config["PATH_DATA"]
+last_dataset = config["last_dataset"]
 def plot_aci_values_regions(df, plot, hue, region_type):
 
     df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day']])
@@ -65,17 +69,7 @@ def plot_aci_values_regions(df, plot, hue, region_type):
                 height=600,
                 width=1200
             )
-            # Plot using Seaborn
-            # sns.set(style="whitegrid")
-            # plt.figure(figsize=(12, 6))
-            # ax = sns.barplot(data=df, x="Region", y="Value", hue="Year_Month_Day")
-            # ax.set(xlabel="Region", ylabel="Value")
-            # plt.xticks(rotation=45)
-            # plt.title("ACI values according to regions for different dates")
-            # # Display or save the plot
-            # plt.grid(True)
-            # region_wise = ('region_wise.png')
-            # plt.savefig(region_wise, dpi=150)
+
 
         elif hue == 'Years on x-axis':
             # Plot 2: Years on x-axis, regions as hue
@@ -94,17 +88,7 @@ def plot_aci_values_regions(df, plot, hue, region_type):
                 height=600,
                 width=1200
             )
-            # plt.figure(figsize=(10, 6))
-            # sns.barplot(data=df, x='Year_Month_Day', y='Value', hue='Region')
-            # plt.xlabel('Years')
-            # plt.ylabel('Average ACI Values')
-            # plt.title('ACI Values by Region and Year')
-            # plt.legend(title='Region')
-            # # Display or save the plot
-            # plt.grid(True)
-            # region_wise = ('region_wise.png')
-            # plt.savefig(region_wise, dpi=150)
-            # plt.show()
+
 
     elif plot == 'Time series plot':
         # Convert the dictionary to a list of dictionaries
@@ -133,17 +117,7 @@ def plot_aci_values_regions(df, plot, hue, region_type):
                 height=600,
                 width=1200
             )
-            # plt.figure(figsize=(10, 6))
-            # sns.lineplot(data=df, x='Region', y='Value', hue='Year_Month_Day')
-            # plt.xlabel('Regions')
-            # plt.ylabel('Average ACI Values')
-            # plt.title('ACI Values by Region and Year')
-            # plt.legend(title='Year')
-            # # Display or save the plot
-            # plt.grid(True)
-            # region_wise = ('region_wise.png')
-            # plt.savefig(region_wise, dpi=150)
-            # plt.show()
+
 
         elif hue == 'Years on x-axis':
             # Plot 2: Years on x-axis, regions as hue
@@ -162,26 +136,26 @@ def plot_aci_values_regions(df, plot, hue, region_type):
                 height=600,
                 width=1200
             )
-            # plt.figure(figsize=(10, 6))
-            # sns.lineplot(data=df, x='Year_Month_Day', y='Value', hue='Region')
-            # plt.xlabel('Years')
-            # plt.ylabel('Average ACI Values')
-            # plt.title('ACI Values by Region and Year')
-            # plt.legend(title='Region')
-            # # Display or save the plot
-            # plt.grid(True)
-            # region_wise = ('region_wise.png')
-            # plt.savefig(region_wise, dpi=150)
-            # plt.show()
+
 
     return fig
 
 
-def aci_whole_plot(df, radio_x_axis, radio_groupby, y_var, resolution):
+def whole_year_plot(dd_ds, radio_x_axis, radio_groupby, y_var, resolution):
+    csv_file_path = os.path.join(os.path.dirname(path_data), "exp", last_dataset, "all_indices.csv")
+    print(csv_file_path)
+    df = pd.read_csv(csv_file_path)
 
-    df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']], format = '%Y/%m/%d %H:%M')
-    df['Time'] = df['Date'].dt.time  # Convert 'Time' to string
+    df['Date'] = pd.to_datetime(df['Date'])
 
+    # Access individual details
+    df['Year'] = df['Date'].dt.year
+    df['Month'] = df['Date'].dt.month
+    df['Week'] = df['Date'].dt.isocalendar().week
+    df['Day'] = df['Date'].dt.day
+    df['Hour'] = df['Date'].dt.hour
+    df['Minute'] = df['Date'].dt.minute
+    df['Second'] = df['Date'].dt.second
 
     if radio_x_axis == 'year cycle':
 
