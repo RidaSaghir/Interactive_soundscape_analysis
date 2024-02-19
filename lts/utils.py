@@ -51,7 +51,6 @@ def summarise_dataset(dataset):
 def compute_indices(dataset, btn_compute):
     list_wav = glob.glob(os.path.join(PATH_DATA, dataset, '**', '*.wav'), recursive=True)
     is_computed = os.path.isfile(os.path.join(PATH_EXP, dataset, 'all_indices.csv'))
-    print(btn_compute)
 
     if not is_computed or btn_compute == 'Recompute indices?':
         # TODO In case is_computed is True, ask whether to recompute

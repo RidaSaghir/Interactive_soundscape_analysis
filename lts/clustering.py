@@ -1,17 +1,24 @@
 import matplotlib.pyplot as plt
 import plotly.express as px
-import plotly.graph_objects as go
 import pandas as pd
 from sklearn.cluster import KMeans, AgglomerativeClustering
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score
 from scipy.cluster.hierarchy import linkage, dendrogram
 from pca import pca
+import os
+import json
 
 
+config = json.load(open('config.json',))
+PATH_DATA = config["PATH_DATA"]
+last_dataset = config["last_dataset"]
+PATH_EXP = os.path.join(os.path.dirname(PATH_DATA), 'exp')
+
+csv_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, "all_indices.csv")
 class ClusteringVisualizer:
-    def __init__(self, data):
-        self.data = data
+    def __init__(self):
+        self.data = pd.read_csv(csv_file_path)
         self.scaled_data = []
         self.optimal_clusters = None
         self.sil_score = None
@@ -31,7 +38,7 @@ class ClusteringVisualizer:
         for k in k_values:
             kmeans = KMeans(n_clusters=k, n_init=10)
             #data.loc[:, 'Cluster'] = kmeans.fit_predict(data)
-            cluster_labels = kmeans.fit_predict(self.df_pca)
+            cluster_labels = kmeans.fit_predict(data)
             silhouette_avg = silhouette_score(data, cluster_labels)
             silhouette_scores.append(silhouette_avg)
 
@@ -80,13 +87,13 @@ class ClusteringVisualizer:
             scaled_df = pd.DataFrame(self.scaled_data, columns=selected_data.columns)
 
             if clusters_ideal == 'Get optimum number of clusters':
-                print(self.scaled_data)
                 self.optimal_clusters, self.sil_score = self.find_optimal_clusters(scaled_df, max_clusters)
             elif clusters_ideal == 'Choose the number of clusters':
                 self.optimal_clusters = num_clusters
 
             # Apply K-Means clustering
             kmeans = KMeans(n_clusters=self.optimal_clusters)
+            print(self.scaled_data)
             self.data['KMeans_Cluster'] = kmeans.fit_predict(self.scaled_data)
 
         # Create a dictionary to store cluster members (file names)
@@ -94,13 +101,16 @@ class ClusteringVisualizer:
         # Populate the cluster members dictionary
         for idx, row in self.data.iterrows():
             cluster_label = row['KMeans_Cluster']
-            file_name = row['File']
+            file_name = row.index
             cluster_members[cluster_label].append(file_name)
 
         # Plot the clusters
         colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k', 'w', 'orange', 'purple', 'pink', 'lime', 'brown', 'gray', 'indigo']
         markers = ['o', 's', 'D', '^', 'v', '<', '>', 'p', 'H', 'X', '*', '+']
 
+        self.data.to_csv(os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, "clustered_indices.csv"))
+        print(PATH_DATA)
+        print(last_dataset)
         fig = px.scatter_3d(
                 self.data[self.data['KMeans_Cluster'] < self.optimal_clusters],  # Filter data for optimal clusters
                 x=columns[0],
@@ -111,7 +121,7 @@ class ClusteringVisualizer:
                 title='K-Means Clustering'
             )
 
-        return fig, self.data, self.sil_score
+        return fig, self.sil_score
 
     def hierar_clustering(self, clustering):
         # Apply hierarchical clustering
