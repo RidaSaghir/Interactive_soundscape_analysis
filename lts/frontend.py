@@ -1,13 +1,15 @@
 import json
 import logging
 import os
-
+import pandas as pd
 import gradio as gr
 
 from .utils import compute_indices, summarise_dataset, list_datasets, update_last_dataset
 from graph_plotting import whole_year_plot
 from clustering import ClusteringVisualizer
 from hierar_clustering import hierarchical_clustering
+from cluster_occur_bar import cluster_occurrence_bar
+from cluster_occur_rose import cluster_occurrence_rose
 
 logger = logging.getLogger(__name__)
 # Construct the absolute path to the config.json file
@@ -49,6 +51,18 @@ class FrontEndLite:
             return gr.Slider(visible=False), gr.Image(visible=True), gr.Textbox(visible=True)
         else:
             return gr.Slider(visible=True), gr.Image(visible=False), gr.Textbox(visible=False)
+
+    def cluster_options_update(self, which_cluster_result):
+        last_dataset = config["last_dataset"]
+        if which_cluster_result == 'pca':
+            csv_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, "clustered_indices_pca.csv")
+        elif which_cluster_result == 'acoustic':
+            csv_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, "clustered_indices_pca.csv")
+
+        data = pd.read_csv(csv_file_path)
+        unique_clusters = sorted(data['KMeans_Cluster'].unique())
+        cluster_options = [f"Cluster {cluster}" for cluster in unique_clusters]
+        return gr.Dropdown(choices=cluster_options, interactive=True)
 
     def _build_app(self):
         css = """
@@ -171,23 +185,42 @@ class FrontEndLite:
                             gr.Markdown(
                                 '<span style="color:#575757;font-size:18px">Barplot for cluster occurrences</span>')
                             with gr.Row():
+                                gr.HTML(
+                                    """
+                                        <strong>Note: To view the results, you need to perform the clustering first.</strong>
+                                    """
+                                )
+                                which_cluster_result_bar = gr.Radio([('Using PCA', 'pca'), ('Just acoustic indices', 'acoustic')],
+                                                          label='Which clustering results to use')
                                 which_cluster = gr.Dropdown(choices=['demo value 1', 'demo value 2'], label='Select the cluster',
-                                                             interactive=False)
+                                                             interactive=True)
                                 cluster_x_axis = gr.Radio(['Year cycle', 'Diel cycle', 'Linear cycle'],
                                                           label='Select the range for x axis')
-                                cluster_hue = gr.Radio(['Year', 'Month', 'Day', 'Hour'],
+                                cluster_hue_b = gr.Radio(['Year', 'Month', 'Day', 'Hour'],
                                                        label='Select the grouping by option')
+                                which_cluster_result_bar.change(fn=self.cluster_options_update, inputs=which_cluster_result_bar, outputs=[which_cluster])
+
                             with gr.Row():
-                                submit_btn_occurrences = gr.Button("Generate Barplot", interactive=True)
+                                btn_occurrences_bar = gr.Button("Generate Barplot", interactive=True)
+
                             with gr.Row():
                                 clusters_bar = gr.Plot()
+                                btn_occurrences_bar.click(fn=cluster_occurrence_bar,
+                                                          inputs=[which_cluster, cluster_x_axis, cluster_hue_b, which_cluster_result_bar],
+                                                          outputs=clusters_bar)
+
                         with gr.Accordion('24h Rose Plots', open=False):
-                            which_cluster_r = gr.Dropdown(choices=['demo value 1', 'demo value 2'], label='Select the cluster',
-                                                          interactive=False)
-                            cluster_hue_r = gr.Radio(['Year', 'Month', 'Day'],
-                                                     label='Select the grouping by option')
                             with gr.Row():
-                                submit_btn_rose = gr.Button("Generate Rose Plot", interactive=True)
+                                which_cluster_result_rose = gr.Radio([('Using PCA', 'pca'), ('Just acoustic indices', 'acoustic')],
+                                                                    label='Which clustering results to use')
+                                which_cluster_r = gr.Dropdown(choices=['demo value 1', 'demo value 2'], label='Select the cluster',
+                                                              interactive=False)
+                                cluster_hue_r = gr.Radio(['Year', 'Month', 'Day'],
+                                                         label='Select the grouping by option')
+                                which_cluster_result_rose.change(fn=self.cluster_options_update, inputs=which_cluster_result_bar, outputs=[which_cluster_r])
+
+                            with gr.Row():
+                                btn_occurrences_rose = gr.Button("Generate Rose Plot", interactive=True)
                             with gr.Row():
                                 clusters_rose = gr.Plot()
 

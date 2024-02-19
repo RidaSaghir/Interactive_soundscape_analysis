@@ -12,14 +12,16 @@ PATH_DATA = config["PATH_DATA"]
 last_dataset = config["last_dataset"]
 PATH_EXP = os.path.join(os.path.dirname(PATH_DATA), 'exp')
 
-csv_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, "clustered_indices.csv")
 def hierarchical_clustering(num_clusters_hierar, clustering_param_hierar, cluster_indices):
-    data = pd.read_csv(csv_file_path)
 
     if clustering_param_hierar == 'acoustic':
+        csv_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, "clustered_indices.csv")
+        data = pd.read_csv(csv_file_path)
         selected_data = data[cluster_indices]
 
     if clustering_param_hierar == 'pca':
+        csv_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, "clustered_indices_pca.csv")
+        data = pd.read_csv(csv_file_path)
         pca_columns = [col for col in data.columns if col.startswith('Principal Component')]
         selected_data = data[pca_columns]
 
