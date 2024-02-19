@@ -7,6 +7,7 @@ import gradio as gr
 from .utils import compute_indices, summarise_dataset, list_datasets, update_last_dataset
 from graph_plotting import whole_year_plot
 from clustering import ClusteringVisualizer
+from hierar_clustering import hierarchical_clustering
 
 logger = logging.getLogger(__name__)
 # Construct the absolute path to the config.json file
@@ -147,9 +148,24 @@ class FrontEndLite:
 
                     with gr.Accordion('Hierarchical Clustering', open=False):
                         with gr.Row():
-                            btn_hierarchical_indices = gr.Button("Perform hierarchical clustering", interactive=True)
+                            gr.HTML(
+                                """
+                                    <strong>Note: The choice of acoustic indices or dimensions of PCA would be taken from the previous calculations from K-Means.</strong>
+                                """
+                            )
+                            num_clusters_hierar = gr.Slider(minimum=1, maximum=10, value=2, step=1,
+                                                            label="Select the number of clusters", interactive=True,
+                                                            visible=True)
+                            clustering_param_hierar = gr.Radio([('Use acoustic indices directly', 'acoustic'),
+                                                       ('Use principal component analysis on acoustic indices', 'pca')],
+                                                       label="How to cluster?")
+                            btn_hierarchical = gr.Button("Perform hierarchical clustering", interactive=True)
+
                         with gr.Row():
-                            clusters_pic_hierar = gr.Plot(label="Clusters based on hierarchical clustering")
+                            ward_linkage = gr.Image(label="Ward Linkage Using Eucledean Distance")
+                            hierar_clusters = gr.Plot(label="Clusters based on Hierarchical Clustering")
+                            btn_hierarchical.click(fn=hierarchical_clustering,
+                                                   inputs=[num_clusters_hierar, clustering_param_hierar, cluster_indices], outputs=[ward_linkage, hierar_clusters])
                     with gr.Accordion('Cluster Occurrences', open=False):
                         with gr.Accordion('Bar Plots', open=False):
                             gr.Markdown(
