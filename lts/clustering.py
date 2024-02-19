@@ -59,7 +59,7 @@ class ClusteringVisualizer:
 
         if clustering == 'pca':
             # Data already scaled in PCA function
-            self.df_pca, result_df, columns = pca(self.data, num_dim, clusters_ideal, num_clusters, max_clusters)
+            self.df_pca, result_df, columns = pca(self.data, num_dim)
 
             if clusters_ideal == 'Get optimum number of clusters':
                 self.optimal_clusters, self.sil_score = self.find_optimal_clusters(self.df_pca, max_clusters)
@@ -69,8 +69,6 @@ class ClusteringVisualizer:
             # Apply K-Means clustering
             kmeans = KMeans(n_clusters=self.optimal_clusters)
             self.data['KMeans_Cluster'] = kmeans.fit_predict(self.df_pca)
-            # Create a dictionary to store cluster members (file names)
-            cluster_members = {i: [] for i in range(self.optimal_clusters)}
             # Remove existing PCA columns from the DataFrame
             existing_pca_columns = [col for col in self.data.columns if col.startswith('Principal Component')]
             self.data = self.data.drop(columns=existing_pca_columns, errors='ignore')

@@ -1,16 +1,21 @@
 import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+import os
+import json
+
+config = json.load(open('config.json',))
+PATH_DATA = config["PATH_DATA"]
+last_dataset = config["last_dataset"]
+PATH_EXP = os.path.join(os.path.dirname(PATH_DATA), 'exp')
 
 
-
-
-
-def pca(data_frame, num_dim, clusters_ideal, num_clusters, max_clusters):
+def pca(data_frame, num_dim):
 
     # Perform PCA
+    # TODO: Find out why column AGI is giving errors : Too large for dtype(float64)
     selected_data = data_frame[
-        ['ACI', 'ENT', 'EVN', 'LFC', 'MFC', 'HFC', 'EPS', 'EAS', 'ECV']]  # Add other indices as needed
+        ['ACI', 'Ht', 'EVNtCount', 'ECV', 'EAS', 'LFC', 'HFC', 'MFC', 'Hf', 'ADI', 'BI']]  # Add other indices as needed
     # Standardize the data
     scaler = StandardScaler()
     scaled_data = scaler.fit_transform(selected_data)
@@ -21,6 +26,6 @@ def pca(data_frame, num_dim, clusters_ideal, num_clusters, max_clusters):
     df_pca = pd.DataFrame(data=principal_components, columns=columns)
 
     # Concatenate the original DataFrame with the new DataFrame
-    result_df = pd.concat([data_frame[['File', 'Timestamp']], df_pca], axis=1)
-    result_df.to_csv('result_df.csv')
+    result_df = pd.concat([data_frame[['Date']], df_pca], axis=1)
+    result_df.to_csv(os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, "clustered_indices_pca.csv"))
     return df_pca, result_df, columns

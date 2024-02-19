@@ -136,7 +136,7 @@ class FrontEndLite:
                                         max_clusters = gr.Textbox(label='Enter the maximum number of clusters to find optimum number of clusters from.', visible=False)
                                     num_clusters = gr.Slider(minimum=1, maximum=10, value=2, step=1,
                                                               label="Select the number of clusters", interactive=True, visible=True)
-                                    cluster_indices = gr.CheckboxGroup(['ACI', 'Ht', 'EVNtCount', 'ECV', 'EAS', 'LFC', 'HFC', 'MFC', 'EPS'], label= 'Choose the parameters for clustering',
+                                    cluster_indices = gr.CheckboxGroup(['ACI', 'Ht', 'EVNtCount', 'ECV', 'EAS', 'LFC', 'HFC', 'MFC', 'Hf', 'ADI', 'AGI', 'BI'], label= 'Choose the parameters for clustering',
                                                                        visible=False)
                                     num_dimensions = gr.Slider(minimum=1, maximum=10, value=2, step=1,
                                                               label="Select the number of dimensions for PCA", interactive=True, visible=False)
