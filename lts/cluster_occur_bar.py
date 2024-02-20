@@ -25,6 +25,8 @@ def cluster_occurrence_bar(which_cluster, cluster_x_axis, cluster_hue_b, which_c
     cluster_df['Day'] = cluster_df['Date'].dt.day
     cluster_df['Hour'] = cluster_df['Date'].dt.hour
 
+    first_column = None
+    sec_column = None
 
     if cluster_hue_b == 'year':
         #first_column = cluster_df['Date'].dt.year
@@ -47,20 +49,23 @@ def cluster_occurrence_bar(which_cluster, cluster_x_axis, cluster_hue_b, which_c
         sec_column = 'Hour'
 
 
-    if cluster_x_axis == 'Linear cycle':
-        df_count = cluster_df.groupby('Date').size().reset_index(name='Count')
-        fig = px.bar(df_count, x='Date', y='Count', color=first_column,
-                         labels={'Count': f'Occurrences of Cluster {which_cluster}'},
-                         title=f'Occurrences of Cluster {which_cluster} ')
-
-    if first_column != sec_column:
+    if first_column and sec_column and first_column != sec_column:
         df_count = cluster_df.groupby([first_column, sec_column]).size().reset_index(name='Count')
-    else:
+    elif first_column and sec_column and first_column == sec_column:
         df_count = cluster_df.groupby([first_column]).size().reset_index(name='Count')
 
-    fig = px.bar(df_count, x=sec_column, y='Count', color=first_column,
+
+    if cluster_x_axis == 'Linear cycle':
+        cluster_df.set_index('Date', inplace=True)
+        df_count = cluster_df.groupby(cluster_df.index.date).size().reset_index(name='Count')
+        df_count.set_index('Date', inplace=True)
+        fig = px.bar(df_count, x=df_count.index, y='Count', color=df_count.index.year,
                          labels={'Count': f'Occurrences of Cluster {which_cluster}'},
                          title=f'Occurrences of Cluster {which_cluster} ')
+        return fig
 
+    fig = px.bar(df_count, x=sec_column, y='Count', color=first_column,
+                 labels={'Count': f'Occurrences of Cluster {which_cluster}'},
+                 title=f'Occurrences of Cluster {which_cluster} ')
 
     return fig
