@@ -215,12 +215,16 @@ class FrontEndLite:
                                                               interactive=False)
                                 cluster_hue_r = gr.Radio(['Year', 'Month', 'Day'],
                                                          label='Select the grouping by option')
-                                which_cluster_result_rose.change(fn=self.cluster_options_update, inputs=which_cluster_result_bar, outputs=[which_cluster_r])
+                                which_cluster_result_rose.change(fn=self.cluster_options_update, inputs=which_cluster_result_rose, outputs=[which_cluster_r])
 
                             with gr.Row():
                                 btn_occurrences_rose = gr.Button("Generate Rose Plot", interactive=True)
                             with gr.Row():
                                 clusters_rose = gr.Plot()
+                                btn_occurrences_rose.click(fn=cluster_occurrence_rose,
+                                                          inputs=[which_cluster_r, cluster_hue_r,
+                                                                  which_cluster_result_rose],
+                                                          outputs=clusters_rose)
 
                             btn_clusters.click(clustering.kmeans_clustering,
                                                [clustering_param, num_dimensions, cluster_indices, clusters_ideal, num_clusters,

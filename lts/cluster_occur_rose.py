@@ -15,7 +15,15 @@ def cluster_occurrence_rose(which_cluster_r, cluster_hue_r, which_cluster_result
         csv_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, "clustered_indices_pca.csv")
 
     data_clustered = pd.read_csv(csv_file_path)
+    which_cluster_r = int(which_cluster_r.split()[1])
     cluster_df = data_clustered[data_clustered['KMeans_Cluster'] == int(which_cluster_r)]
+
+    cluster_df['Date'] = pd.to_datetime(cluster_df['Date'])
+    cluster_df['Year'] = cluster_df['Date'].dt.year
+    cluster_df['Month'] = cluster_df['Date'].dt.month
+    cluster_df['Day'] = cluster_df['Date'].dt.day
+    cluster_df['Hour'] = cluster_df['Date'].dt.hour
+
     cluster_df = cluster_df.groupby([cluster_hue_r, 'Hour']).size().reset_index(name='Count')
     cluster_df = cluster_df.assign(r=(cluster_df["Hour"] / 24) * 360)
     fig = px.bar_polar(cluster_df, r="Count", theta="r",
