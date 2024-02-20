@@ -194,7 +194,7 @@ class FrontEndLite:
                                                              interactive=True)
                                 cluster_x_axis = gr.Radio(['Year cycle', 'Diel cycle', 'Linear cycle'],
                                                           label='Select the range for x axis')
-                                cluster_hue_b = gr.Radio(['Year', 'Month', 'Day', 'Hour'],
+                                cluster_hue_b = gr.Radio(['year', 'month', 'day', 'hour'],
                                                        label='Select the grouping by option')
                                 which_cluster_result_bar.change(fn=self.cluster_options_update, inputs=which_cluster_result_bar, outputs=[which_cluster])
 
