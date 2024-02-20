@@ -12,11 +12,8 @@ from cluster_occur_bar import cluster_occurrence_bar
 from cluster_occur_rose import cluster_occurrence_rose
 
 logger = logging.getLogger(__name__)
-# Construct the absolute path to the config.json file
-config_file_path = os.path.join(os.path.dirname(__file__), 'config.json')
-with open(config_file_path) as config_file:
-    config = json.load(config_file)
 
+config = json.load(open('config.json'))
 PATH_DATA = config.get('PATH_DATA')
 PATH_EXP = os.path.join(os.path.dirname(PATH_DATA), 'exp')
 
@@ -100,9 +97,9 @@ class FrontEndLite:
 
             with gr.Tab('Time series'):
                 # Add a descriptive text above the button
-                # dates = gr.CheckboxGroup(label="Data from following dates were found. Select dates to analyse", choices=detect_datasets())
                 with gr.Column():
                     with gr.Row():
+                        #TODO: Find out why AGI values are causing problems.
                         index_select = gr.Dropdown(
                             [("ACI (Acoustic Complexity Index)", 'ACI'), ("ENT (Temporal Entropy Index)", 'Ht'),
                              ("ENT (Spectral Entropy Index)", 'Hf'),
@@ -115,7 +112,8 @@ class FrontEndLite:
                              ('ESV (Entropy of Spectral Variance)', 'ESV'),
                              ('ECV (Entropy of Coefficient of Variance)', 'ECV'),
                              ('EPS (Entropy of Spectral Maxima)', 'EPS'),
-                             'ACTtCount', 'AGI', 'SNRt'],
+                             ('ADI (Acoustic Diversity Index)', 'ADI'),
+                             'ACTtCount', 'AGI', 'SNRt', ''],
                             label="Acoustic Indices")
                         resolution = gr.Radio(["Monthly", "Daily", "Hourly", "Minutes"],
                                               label="Select the resolution for plotting the values")

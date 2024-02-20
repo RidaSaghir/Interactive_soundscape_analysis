@@ -5,9 +5,8 @@ import calendar
 import os
 import json
 
-config_file_path = os.path.join(os.path.dirname(__file__), 'config.json')
-with open(config_file_path) as config_file:
-    config = json.load(config_file)
+
+config = json.load(open('config.json'))
 
 path_data = config["PATH_DATA"]
 last_dataset = config["last_dataset"]
@@ -142,8 +141,9 @@ def plot_aci_values_regions(df, plot, hue, region_type):
 
 
 def whole_year_plot(dd_ds, radio_x_axis, radio_groupby, y_var, resolution):
+    print(f'This is the last data set in graph plotting {last_dataset}')
+
     csv_file_path = os.path.join(os.path.dirname(path_data), "exp", last_dataset, "all_indices.csv")
-    print(csv_file_path)
     df = pd.read_csv(csv_file_path)
 
     df['Date'] = pd.to_datetime(df['Date'])

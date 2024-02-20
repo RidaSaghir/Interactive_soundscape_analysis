@@ -13,19 +13,14 @@ from maad import sound, features
 from date_parser import parse_date
 
 logger = logging.getLogger(__name__)
-# Construct the absolute path to the config.json file
-config_file_path = os.path.join(os.path.dirname(__file__), 'config.json')
-# Load the config.json file
-with open(config_file_path) as config_file:
-    config = json.load(config_file)
-#config = json.load(open('config.json'))
+config = json.load(open('config.json'))
 PATH_DATA = config.get('PATH_DATA')
 PATH_EXP = os.path.join(os.path.dirname(PATH_DATA), 'exp')
 logging.debug('PATH_DATA: {}'.format(PATH_DATA))
 
 def list_datasets():
     ds_choices = [i for i in os.listdir(PATH_DATA) if os.path.isdir(os.path.join(PATH_DATA, i))]
-    ds_value = json.load(open(config_file_path)).get('last_dataset')
+    ds_value = json.load(open('config.json')).get('last_dataset')
     ds_value = ds_value if ds_value in ds_choices else None
     return ds_choices, ds_value
 

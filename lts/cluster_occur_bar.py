@@ -3,7 +3,7 @@ import plotly.express as px
 import json
 import os
 
-config = json.load(open('config.json',))
+config = json.load(open('config.json'))
 PATH_DATA = config["PATH_DATA"]
 last_dataset = config["last_dataset"]
 PATH_EXP = os.path.join(os.path.dirname(PATH_DATA), 'exp')

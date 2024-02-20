@@ -9,11 +9,10 @@ import os
 import json
 
 
-config = json.load(open('config.json',))
+config = json.load(open('config.json', ))
 PATH_DATA = config["PATH_DATA"]
 last_dataset = config["last_dataset"]
 PATH_EXP = os.path.join(os.path.dirname(PATH_DATA), 'exp')
-
 csv_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, "all_indices.csv")
 class ClusteringVisualizer:
     def __init__(self):
@@ -55,6 +54,7 @@ class ClusteringVisualizer:
 
 
     def kmeans_clustering(self, clustering, num_dim, columns, clusters_ideal, num_clusters, max_clusters):
+        print(f'This is the last data set in clustering {last_dataset}')
 
         if clustering == 'pca':
             file_name_csv = 'clustered_indices_pca.csv'
