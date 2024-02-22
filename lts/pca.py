@@ -10,12 +10,8 @@ last_dataset = config["last_dataset"]
 PATH_EXP = os.path.join(os.path.dirname(PATH_DATA), 'exp')
 
 
-def pca(data_frame, num_dim):
-
-    # Perform PCA
-    # TODO: Find out why column AGI is giving errors : Too large for dtype(float64)
-    selected_data = data_frame[
-        ['ACI', 'Ht', 'EVNtCount', 'ECV', 'EAS', 'LFC', 'HFC', 'MFC', 'Hf', 'ADI', 'BI']]  # Add other indices as needed
+def pca(data_frame, num_dim, selected_columns):
+    selected_data = data_frame[selected_columns]
     # Standardize the data
     scaler = StandardScaler()
     scaled_data = scaler.fit_transform(selected_data)
