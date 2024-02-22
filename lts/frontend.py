@@ -37,11 +37,16 @@ class FrontEndLite:
         else:
             return gr.Text(visible=False)
 
-    def clustering_options(self, selected_option):
-        if selected_option == 'pca':
-            return gr.Radio(visible=False), gr.Slider(visible=True)
+    def clustering_options_rep(self, selected_option):
         if selected_option == 'acoustic':
-            return gr.Radio(visible=True), gr.Slider(visible=False)
+            return gr.Radio(visible=True)
+        else:
+            return gr.Radio(visible=False)
+    def clustering_options_dim(self, selected_option):
+        if selected_option == 'pca':
+            return gr.Slider(visible=True), gr.Radio(visible=False)
+        elif selected_option == 'none':
+            return gr.Slider(visible=False), gr.Radio(visible=True)
 
     def ideal_clustering(self, clusters_ideal):
         if clusters_ideal == 'Get optimum number of clusters':
@@ -139,9 +144,16 @@ class FrontEndLite:
                     with gr.Accordion('K Means', open=False):
                         with gr.Column():
                             with gr.Row():
-                                clustering_param = gr.Radio([('Use acoustic indices directly', 'acoustic'),
-                                                       ('Use principal component analysis on acoustic indices', 'pca')],
-                                                       label="How to cluster?")
+                                with gr.Column():
+                                    clustering_rep = gr.Radio([('Acoustic Indices', 'acoustic'),
+                                                       ('VAE', 'vae')],
+                                                       label="What representations to use?")
+                                    clustering_filter = gr.Radio([('Acoustic Regions', 'acoustic region'),
+                                                       ('None', 'none')],
+                                                       label="What filters to use?")
+                                    clustering_dim_red = gr.Radio([('PCA', 'pca'),
+                                                       ('t-SNE', 'tsne'), ('None', 'none')],
+                                                       label="What dimensionality reduction technique to use?")
                                 with gr.Column() as output_col:
                                     with gr.Row():
                                         clusters_ideal = gr.Radio(['Choose the number of clusters', 'Get optimum number of clusters'], label="How to chose number of clusters", interactive=True,
@@ -227,10 +239,11 @@ class FrontEndLite:
                                                           outputs=clusters_rose)
 
                             btn_clusters.click(clustering.kmeans_clustering,
-                                               [clustering_param, num_dimensions, cluster_indices, clusters_ideal, num_clusters,
+                                               [clustering_rep, clustering_filter, clustering_dim_red, num_dimensions, cluster_indices, clusters_ideal, num_clusters,
                                                  max_clusters],
                                                outputs=[clusters_pic, sil_score])
-                            clustering_param.change(fn=self.clustering_options, inputs=clustering_param, outputs=[cluster_indices, num_dimensions])
+                            clustering_rep.change(fn=self.clustering_options_rep, inputs=clustering_rep, outputs=[cluster_indices])
+                            clustering_dim_red.change(fn=self.clustering_options_dim, inputs=clustering_dim_red, outputs=[num_dimensions, cluster_indices])
                             clusters_ideal.change(fn=self.ideal_clustering, inputs=clusters_ideal,
                                                   outputs=[num_clusters, sil_score, max_clusters])
 
