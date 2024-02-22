@@ -10,139 +10,9 @@ config = json.load(open('config.json'))
 
 path_data = config["PATH_DATA"]
 last_dataset = config["last_dataset"]
-def plot_aci_values_regions(df, plot, hue, region_type):
-
-    df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day']])
-    group_region_averages = {}
-
-    # Iterate through rows and accumulate values for each region within the same 'Year', 'Month', and 'Day' group
-    for i, group in df.groupby(['Year']):
-        total_rows_in_group = len(group)
-
-        # Initialize the group's region averages that are present in region_type
-        group_region_average = {region: 0 for region in region_type}
-
-        # Iterate through rows within the group
-        for index, row in group.iterrows():
-            aci_values_str = row['ACI in regions']
-            aci_values = ast.literal_eval(aci_values_str)
-            print(aci_values)# Parse the string to a dictionary
-            for region in region_type:
-                group_region_average[region] += aci_values.get(region, 0)
-                print(aci_values.get(region, 0))
-
-
-        # Calculate the average for each region within the group
-        for region in group_region_average:
-            group_region_average[region] /= total_rows_in_group
-
-        # Store the group's region averages in the dictionary
-        group_region_averages[i] = group_region_average
-
-    region_wise = None
-    if plot == 'Bar plot':
-
-        # Convert the dictionary to a list of dictionaries
-        data = []
-        for key, values in group_region_averages.items():
-            data.append({'Year_Month_Day': "-".join(map(str, key)), **values})
-        # Create a DataFrame
-        df = pd.DataFrame(data)
-        # Reshape the DataFrame
-        df = df.melt(id_vars=['Year_Month_Day'], var_name='Region', value_name='Value')
-
-        if hue == 'Regions on x-axis':
-            # Plot 1: Regions on x-axis, years as hue
-            fig = px.bar(df, x="Region", y="Value", color="Year_Month_Day", barmode="group",
-                         labels={"Value": "Value", "Region": "Region"},
-                         title="ACI values according to regions for different years")
-
-            # Customize the layout
-            fig.update_layout(
-                xaxis_title="Region",
-                yaxis_title="Value",
-                xaxis_tickangle=45,
-                bargap=0.2,
-                showlegend=True,
-                legend_title="Date",
-                height=600,
-                width=1200
-            )
-
-
-        elif hue == 'Years on x-axis':
-            # Plot 2: Years on x-axis, regions as hue
-            fig = px.bar(df, x="Year_Month_Day", y="Value", color="Region", barmode="group",
-                         labels={"Value": "Value", "Region": "Region"},
-                         title="ACI values according to regions for different years")
-
-            # Customize the layout
-            fig.update_layout(
-                xaxis_title="Years",
-                yaxis_title="Value",
-                xaxis_tickangle=45,
-                bargap=0.2,
-                showlegend=True,
-                legend_title="Regions",
-                height=600,
-                width=1200
-            )
-
-
-    elif plot == 'Time series plot':
-        # Convert the dictionary to a list of dictionaries
-        data = []
-        for key, values in group_region_averages.items():
-            data.append({'Year_Month_Day': "-".join(map(str, key)), **values})
-        # Create a DataFrame
-        df = pd.DataFrame(data)
-        # Reshape the DataFrame
-        df = df.melt(id_vars=['Year_Month_Day'], var_name='Region', value_name='Value')
-
-        if hue == 'Regions on x-axis':
-            # Plot 1: Regions on x-axis, years as hue
-            fig = px.line(df, x="Region", y="Value", color="Year_Month_Day",
-                         labels={"Value": "Value", "Region": "Region"},
-                         title="ACI values according to regions for different years")
-
-            # Customize the layout
-            fig.update_layout(
-                xaxis_title="Regions",
-                yaxis_title="Value",
-                xaxis_tickangle=45,
-                bargap=0.2,
-                showlegend=True,
-                legend_title="Date",
-                height=600,
-                width=1200
-            )
-
-
-        elif hue == 'Years on x-axis':
-            # Plot 2: Years on x-axis, regions as hue
-            fig = px.line(df, x="Year_Month_Day", y="Value", color="Region",
-                         labels={"Value": "Value", "Region": "Region"},
-                         title="ACI values according to regions for different years")
-
-            # Customize the layout
-            fig.update_layout(
-                xaxis_title="Years",
-                yaxis_title="Value",
-                xaxis_tickangle=45,
-                bargap=0.2,
-                showlegend=True,
-                legend_title="Regions",
-                height=600,
-                width=1200
-            )
-
-
-    return fig
-
 
 def whole_year_plot(dd_ds, radio_x_axis, radio_groupby, y_var, resolution):
     print(f'This is the last data set in graph plotting {last_dataset}')
-
     csv_file_path = os.path.join(os.path.dirname(path_data), "exp", last_dataset, "all_indices.csv")
     df = pd.read_csv(csv_file_path)
 
@@ -217,3 +87,7 @@ def whole_year_plot(dd_ds, radio_x_axis, radio_groupby, y_var, resolution):
 
 
     return fig
+
+
+
+
