@@ -55,16 +55,6 @@ def region_filter(df, region):
     new_filtered_df = {}
     subset_indices = [[] for _ in range(len(filtered_df))]
 
-    # for col in selected_cols:
-    #     if col != 'Date Time':
-    #         for x, value in enumerate(filtered_df[col]):
-    #             index_values = []
-    #             for i, val in enumerate(ast.literal_eval(value)):
-    #                 if i in indexes:
-    #                     index_values.append(val)
-    #             subset_indices[x] = index_values
-    #     new_filtered_df[col] = subset_indices
-
     for col in selected_cols:
         if col != 'Date Time':
             for x, value in enumerate(filtered_df[col]):
@@ -77,7 +67,7 @@ def region_filter(df, region):
         elif col == 'Date Time':
             new_filtered_df['Date'] = filtered_df[col]
 
-
+    new_filtered_df = pd.DataFrame(new_filtered_df)
     selected_cols.remove('Date Time')
     return new_filtered_df, selected_cols
 
