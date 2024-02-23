@@ -12,7 +12,6 @@ path_data = config["PATH_DATA"]
 last_dataset = config["last_dataset"]
 
 def whole_year_plot(dd_ds, radio_x_axis, radio_groupby, y_var, resolution):
-    print(f'This is the last data set in graph plotting {last_dataset}')
     csv_file_path = os.path.join(os.path.dirname(path_data), "exp", last_dataset, "all_indices.csv")
     df = pd.read_csv(csv_file_path)
 
