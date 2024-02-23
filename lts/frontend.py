@@ -42,6 +42,13 @@ class FrontEndLite:
             return gr.Radio(visible=True)
         else:
             return gr.Radio(visible=False)
+
+    def acoustic_region_display(self, selected_option):
+        if selected_option == 'acoustic region':
+            return gr.Dropdown(visible=True)
+        else:
+            return gr.Dropdown(visible=False)
+
     def clustering_options_dim(self, selected_option):
         if selected_option == 'pca':
             return gr.Slider(visible=True), gr.Radio(visible=False)
@@ -155,6 +162,13 @@ class FrontEndLite:
                                                        ('t-SNE', 'tsne'), ('None', 'none')],
                                                        label="What dimensionality reduction technique to use?")
                                 with gr.Column() as output_col:
+                                    acoustic_region = gr.Dropdown(['Acoustic Region 1', 'Acoustic Region 2', 'Acoustic Region 3', 'Acoustic Region 4',
+                                                                   'Acoustic Region 5', 'Acoustic Region 6', 'Acoustic Region 7', 'Acoustic Region 8',
+                                                                   'Acoustic Region 9', 'Acoustic Region 10', 'Acoustic Region 11', 'Acoustic Region 12',
+                                                                   'Acoustic Region 13', 'Acoustic Region 14', 'Acoustic Region 15', 'Acoustic Region 16',
+                                                                   'Acoustic Region 17', 'Acoustic Region 18', 'Acoustic Region 19', 'Acoustic Region 20'],
+                                                                  label="Choose any acoustic region.")
+                                    clustering_filter.change(self.acoustic_region_display, inputs=clustering_filter, outputs=acoustic_region)
                                     with gr.Row():
                                         clusters_ideal = gr.Radio(['Choose the number of clusters', 'Get optimum number of clusters'], label="How to chose number of clusters", interactive=True,
                                                                   visible=True)
@@ -239,13 +253,14 @@ class FrontEndLite:
                                                           outputs=clusters_rose)
 
                             btn_clusters.click(clustering.kmeans_clustering,
-                                               [clustering_rep, clustering_filter, clustering_dim_red, num_dimensions, cluster_indices, clusters_ideal, num_clusters,
+                                               [clustering_rep, clustering_filter, acoustic_region, clustering_dim_red, num_dimensions, cluster_indices, clusters_ideal, num_clusters,
                                                  max_clusters],
                                                outputs=[clusters_pic, sil_score])
                             clustering_rep.change(fn=self.clustering_options_rep, inputs=clustering_rep, outputs=[cluster_indices])
                             clustering_dim_red.change(fn=self.clustering_options_dim, inputs=clustering_dim_red, outputs=[num_dimensions, cluster_indices])
                             clusters_ideal.change(fn=self.ideal_clustering, inputs=clusters_ideal,
                                                   outputs=[num_clusters, sil_score, max_clusters])
+        # All event listeners
 
         self.app = demo
 

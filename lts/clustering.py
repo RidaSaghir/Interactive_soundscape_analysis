@@ -54,13 +54,14 @@ class ClusteringVisualizer:
         return best_k, fig
 
 
-    def kmeans_clustering(self, clustering_rep, clustering_filter, clustering_dim_red, num_dim, columns,
+    def kmeans_clustering(self, clustering_rep, clustering_filter, acoustic_region, clustering_dim_red, num_dim, columns,
                           clusters_ideal, num_clusters, max_clusters):
-        print(f'This is the last data set in clustering {last_dataset}')
+        # To start over with fresh data when new clustering params are selected
+        self.data = pd.read_csv(csv_file_path)
         if clustering_rep == 'acoustic':
             if clustering_filter == 'acoustic region':
                 file_name_csv = 'clustered_indices_regions.csv'
-                region_filtered_df, selected_columns = region_filter(self.data, 'Region 1')
+                region_filtered_df, selected_columns = region_filter(self.data, acoustic_region)
                 if clustering_dim_red == 'pca':
                     self.df_pca, result_df, columns = pca(region_filtered_df, num_dim, selected_columns)
                     if clusters_ideal == 'Get optimum number of clusters':
@@ -68,15 +69,15 @@ class ClusteringVisualizer:
                     elif clusters_ideal == 'Choose the number of clusters':
                         self.optimal_clusters = num_clusters
 
-                        # Apply K-Means clustering
-                        kmeans = KMeans(n_clusters=self.optimal_clusters)
-                        region_filtered_df['KMeans_Cluster'] = kmeans.fit_predict(self.df_pca)
-                        # Remove existing PCA columns from the DataFrame
-                        existing_pca_columns = [col for col in region_filtered_df.columns if
-                                                col.startswith('Principal Component')]
-                        region_filtered_df = region_filtered_df.drop(columns=existing_pca_columns, errors='ignore')
-                        # Concatenate the new PCA columns (the whole original dataframe concatenated with PCs)
-                        self.data = pd.concat([region_filtered_df, self.df_pca], axis=1)
+                    # Apply K-Means clustering
+                    kmeans = KMeans(n_clusters=self.optimal_clusters)
+                    region_filtered_df['KMeans_Cluster'] = kmeans.fit_predict(self.df_pca)
+                    # Remove existing PCA columns from the DataFrame
+                    existing_pca_columns = [col for col in region_filtered_df.columns if
+                                            col.startswith('Principal Component')]
+                    region_filtered_df = region_filtered_df.drop(columns=existing_pca_columns, errors='ignore')
+                    # Concatenate the new PCA columns (the whole original dataframe concatenated with PCs)
+                    self.data = pd.concat([region_filtered_df, self.df_pca], axis=1)
 
 
             elif clustering_filter == 'none':
