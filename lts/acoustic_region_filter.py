@@ -22,7 +22,6 @@ def region_filter(df, region):
     region = int(region.split()[2])
     df['Date Time'] = pd.to_datetime(df['Date'])
 
-    #TODO: Preserve file name/index in the filtered data frames
     if region in [1, 2, 3, 4]:
         filtered_df = df[(df['Date Time'].dt.time  < ref_1.time())]
     elif region in [5, 6, 7, 8]:
@@ -34,6 +33,8 @@ def region_filter(df, region):
     elif region in [17, 18, 19, 20]:
         filtered_df = df[(df['Date Time'].dt.time >= ref_4.time()) & (df['Date Time'].dt.time <= ref_5.time())]
 
+    # Resetting index so that the missing indexes do not cause problems ahead
+    filtered_df = filtered_df.reset_index(drop=True)
     freq_ranges = {
         1: (0, 988), 5: (988, 3609), 9: (3609, 7906), 13: (7906, 11000),
         2: (988, 3609), 6: (988, 3609), 10: (988, 3609), 14: (988, 3609), 18: (988, 3609),
