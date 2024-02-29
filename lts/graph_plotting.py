@@ -58,7 +58,7 @@ def whole_year_plot(dd_ds, radio_x_axis, radio_groupby, y_var, resolution):
 
         fig = px.scatter(df, x=df['Numeric Time'], y=y_var, color=radio_groupby, opacity=0.8, trendline='lowess',
                          hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True})
-        fig.update_layout(title='Average ACI over whole day', xaxis_title='Hours',
+        fig.update_layout(title='{} over Time with {} resolution'.format(y_var,resolution), xaxis_title='Hours',
                           yaxis_title='Average {} Value'.format(y_var))
 
         fig.update_xaxes(
