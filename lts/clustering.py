@@ -58,10 +58,20 @@ class ClusteringVisualizer:
                           clusters_ideal, num_clusters, max_clusters):
         # To start over with fresh data when new clustering params are selected
         self.data = pd.read_csv(csv_file_path)
+        print(csv_file_path)
+        # Todo: Organize and reduce the code
         if clustering_rep == 'acoustic':
             if clustering_filter == 'acoustic region':
                 file_name_csv = 'clustered_indices_regions.csv'
                 region_filtered_df, selected_columns = region_filter(self.data, acoustic_region)
+                for col in region_filtered_df[selected_columns]:
+                    for x in range(len(region_filtered_df)):
+                        val = region_filtered_df.loc[x, col]
+                        value = sum(val) / len(val)
+                        region_filtered_df.loc[x, col] = value
+
+                selected_data = region_filtered_df[selected_columns]
+
                 if clustering_dim_red == 'pca':
                     self.df_pca, result_df, columns = pca(region_filtered_df, num_dim, selected_columns)
                     if clusters_ideal == 'Get optimum number of clusters':
@@ -79,6 +89,23 @@ class ClusteringVisualizer:
                     # Concatenate the new PCA columns (the whole original dataframe concatenated with PCs)
                     self.data = pd.concat([region_filtered_df, self.df_pca], axis=1)
 
+                elif clustering_dim_red == 'none':
+
+                    self.data = region_filtered_df
+                    columns = selected_columns
+                    # Standardize the data
+                    scaler = StandardScaler()
+                    self.scaled_data = scaler.fit_transform(selected_data)
+                    scaled_df = pd.DataFrame(self.scaled_data, columns=selected_data.columns)
+
+                    if clusters_ideal == 'Get optimum number of clusters':
+                        self.optimal_clusters, self.sil_score = self.find_optimal_clusters(scaled_df, max_clusters)
+                    elif clusters_ideal == 'Choose the number of clusters':
+                        self.optimal_clusters = num_clusters
+
+                    # Apply K-Means clustering
+                    kmeans = KMeans(n_clusters=self.optimal_clusters)
+                    self.data['KMeans_Cluster'] = kmeans.fit_predict(self.scaled_data)
 
             elif clustering_filter == 'none':
                 if clustering_dim_red == 'pca':
@@ -136,8 +163,6 @@ class ClusteringVisualizer:
         markers = ['o', 's', 'D', '^', 'v', '<', '>', 'p', 'H', 'X', '*', '+']
 
         self.data.to_csv(os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, file_name_csv))
-        print(PATH_DATA)
-        print(last_dataset)
         fig = px.scatter_3d(
                 self.data[self.data['KMeans_Cluster'] < self.optimal_clusters],  # Filter data for optimal clusters
                 x=columns[0],
