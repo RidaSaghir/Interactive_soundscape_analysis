@@ -82,7 +82,7 @@ class FrontEndLite:
           }
         """
 
-        with gr.Blocks(css=css) as demo:
+        with gr.Blocks(theme= gr.themes.Default(text_size='lg'), css=css) as demo:
             gr.HTML(
                 """
                     <h1 id="title">Long time scale PAM analyser</h1>
