@@ -13,12 +13,6 @@ PATH_EXP = os.path.join(os.path.dirname(PATH_DATA), 'exp')
 
 def pca(data_frame, num_dim, selected_columns):
     selected_data = data_frame[selected_columns]
-    if any('per_bin' in col_name for col_name in selected_columns):
-        for col in data_frame[selected_columns]:
-            for x, val in enumerate(selected_data[col]):
-                value = sum(val) / len(val)
-                selected_data[col].iloc[x] = value
-
     # Standardize the data
     scaler = StandardScaler()
     scaled_data = scaler.fit_transform(selected_data)
