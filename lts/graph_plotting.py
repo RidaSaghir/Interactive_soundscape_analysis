@@ -72,10 +72,7 @@ def whole_year_plot(dd_ds, radio_x_axis, radio_groupby, y_var, resolution):
         resolution_mapping = lambda resolution: 'Y' if resolution == 'Yearly' else 'M' if resolution == 'Monthly' else 'W' if resolution == 'Weekly' else 'D' if resolution == 'Daily' else 'H' if resolution == 'Hourly' else 'T' if resolution == 'Minutes' else None
         resolution_x = resolution_mapping(resolution)
         df.set_index('Date', inplace=True)
-        if radio_groupby == 'KMeans_Cluster':
-            df_filtered = df[[y_var, 'Year', 'Month', 'Week', 'Day', 'Hour', 'Minute', 'KMeans_Cluster']]
-        else:
-            df_filtered = df[[y_var, 'Year', 'Month', 'Week', 'Day', 'Hour', 'Minute']]
+        df_filtered = df[[y_var, 'Year', 'Month', 'Week', 'Day', 'Hour', 'Minute']]
         df_resampled = df_filtered.resample(resolution_x).mean().reset_index()
         fig = px.scatter(df_resampled, x='Date', y=y_var, color=radio_groupby, opacity=0.8, trendline='lowess',
                          hover_data={'Year': True, 'Month': True, 'Week': True, 'Day': True, 'Hour': True})
