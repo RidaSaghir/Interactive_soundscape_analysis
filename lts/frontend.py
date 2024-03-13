@@ -62,11 +62,12 @@ class FrontEndLite:
             return gr.Slider(visible=True), gr.Image(visible=False), gr.Textbox(visible=False)
 
     def cluster_options_update(self, which_cluster_result):
+        print('Hello')
         last_dataset = config["last_dataset"]
         if which_cluster_result == 'pca':
             csv_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, "clustered_indices_pca.csv")
         elif which_cluster_result == 'acoustic':
-            csv_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, "clustered_indices_pca.csv")
+            csv_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, "clustered_indices.csv")
 
         data = pd.read_csv(csv_file_path)
         unique_clusters = sorted(data['KMeans_Cluster'].unique())
@@ -100,12 +101,21 @@ class FrontEndLite:
                         dd_ds = gr.Dropdown(
                             choices=ds_choices, value=ds_value, label='Select')
                         dd_ds.change(update_last_dataset, dd_ds)
-                        btn_load = gr.Button(value='Summarise', size='sm')
+                        btn_load = gr.Button(value='Summarise for acoustic indices', size='sm')
                         btn_compute = gr.Button(label= 'Compute', value='Compute indices', size='sm')
                         txt_out = gr.Textbox(value='Waiting', label='Status')
                         btn_load.click(fn=summarise_dataset, inputs=dd_ds, outputs=txt_out)
                         btn_compute.click(fn=compute_indices, inputs=[dd_ds, btn_compute], outputs=[txt_out])
                         txt_out.change(fn=self.recompute, inputs=[txt_out], outputs=[btn_compute])
+                    with gr.Row():
+                        btn_summarise_vae = gr.Button(value='Summarise for VAE encodings', size='sm')
+                        with gr.Column():
+                            learning_rate = gr.Textbox(label='Input the learning rate')
+                            batch_size = gr.Textbox(label='Input the batch size')
+                        with gr.Column():
+                            latent_dim = gr.Textbox(label='Input the number of dimensions')
+                            btn_compute_vae = gr.Button(label= 'Compute', value='Compute VAE encodings', size='sm')
+                        txt_out_vae = gr.Textbox(value='Waiting', label='Status')
 
             with gr.Tab('Time series'):
                 # Add a descriptive text above the button
@@ -153,7 +163,7 @@ class FrontEndLite:
                             with gr.Row():
                                 with gr.Column():
                                     clustering_rep = gr.Radio([('Acoustic Indices', 'acoustic'),
-                                                       ('VAE', 'vae')],
+                                                       ('VAE Encodings', 'vae')],
                                                        label="What representations to use?")
                                     clustering_filter = gr.Radio([('Acoustic Regions', 'acoustic region'),
                                                        ('None', 'none')],
@@ -161,7 +171,7 @@ class FrontEndLite:
                                     clustering_dim_red = gr.Radio([('PCA', 'pca'),
                                                        ('t-SNE', 'tsne'), ('None', 'none')],
                                                        label="What dimensionality reduction technique to use?")
-                                with gr.Column() as output_col:
+                                with gr.Column():
                                     acoustic_region = gr.Dropdown(['Acoustic Region 1', 'Acoustic Region 2', 'Acoustic Region 3', 'Acoustic Region 4',
                                                                    'Acoustic Region 5', 'Acoustic Region 6', 'Acoustic Region 7', 'Acoustic Region 8',
                                                                    'Acoustic Region 9', 'Acoustic Region 10', 'Acoustic Region 11', 'Acoustic Region 12',
@@ -179,9 +189,14 @@ class FrontEndLite:
                                                                        visible=False)
                                     num_dimensions = gr.Slider(minimum=1, maximum=10, value=2, step=1,
                                                               label="Select the number of dimensions for PCA", interactive=True, visible=False)
+                                with gr.Column():
+                                    cluster_playback = gr.Dropdown(choices=[], label="Choose any cluster to play back audios.", interactive=True)
+                                    playback_audio = gr.Audio(label="Audio files from the selected cluster")
                             btn_clusters =gr.Button('Plot Clusters', interactive=True)
                             with gr.Row():
-                                clusters_pic =  gr.Plot(label="Clusters based on k-means")
+                                clusters_pic = gr.Plot(label="Clusters based on k-means")
+                                clusters_pic.change(fn=self.cluster_options_update, inputs=[clustering_dim_red],
+                                                    outputs=[cluster_playback])
                                 sil_score = gr.Plot(label="Best number of clusters based on Silhouette Scores", visible=False)
 
                     with gr.Accordion('Hierarchical Clustering', open=False):
@@ -214,8 +229,8 @@ class FrontEndLite:
                                         <strong>Note: To view the results, you need to perform the clustering first.</strong>
                                     """
                                 )
-                                which_cluster_result_bar = gr.Radio([('Using PCA', 'pca'), ('Just acoustic indices', 'acoustic')],
-                                                          label='Which clustering results to use')
+                                which_cluster_result_bar = gr.Radio([('Using PCA', 'pca'), ('None', 'acoustic')],
+                                                          label='Which clustering results to use (Dimensionality reduction technique)')
                                 which_cluster = gr.Dropdown(choices=['demo value 1', 'demo value 2'], label='Select the cluster',
                                                              interactive=True)
                                 cluster_x_axis = gr.Radio(['Year cycle', 'Diel cycle', 'Linear cycle'],
@@ -235,8 +250,8 @@ class FrontEndLite:
 
                         with gr.Accordion('24h Rose Plots', open=False):
                             with gr.Row():
-                                which_cluster_result_rose = gr.Radio([('Using PCA', 'pca'), ('Just acoustic indices', 'acoustic')],
-                                                                    label='Which clustering results to use')
+                                which_cluster_result_rose = gr.Radio([('Using PCA', 'pca'), ('None', 'acoustic')],
+                                                                    label='Which clustering results to use (Dimensionality reduction technique)')
                                 which_cluster_r = gr.Dropdown(choices=['demo value 1', 'demo value 2'], label='Select the cluster',
                                                               interactive=False)
                                 cluster_hue_r = gr.Radio(['Year', 'Month', 'Day'],
