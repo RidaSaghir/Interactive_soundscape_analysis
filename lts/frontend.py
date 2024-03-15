@@ -4,7 +4,8 @@ import os
 import pandas as pd
 import gradio as gr
 
-from .utils import compute_indices, summarise_dataset, list_datasets, update_last_dataset
+from .utils import (compute_indices, summarise_dataset, list_datasets, update_last_dataset,
+                    update_clustering_rep, update_clustering_mode, update_clustering_filter, update_dim_red)
 from graph_plotting import whole_year_plot
 from clustering import ClusteringVisualizer
 from hierar_clustering import hierarchical_clustering
@@ -62,7 +63,6 @@ class FrontEndLite:
             return gr.Slider(visible=True), gr.Image(visible=False), gr.Textbox(visible=False)
 
     def cluster_options_update(self, which_cluster_result):
-        print('Hello')
         last_dataset = config["last_dataset"]
         if which_cluster_result == 'pca':
             csv_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, "clustered_indices_pca.csv")
@@ -156,107 +156,112 @@ class FrontEndLite:
                             whole_plot = gr.Plot(label="Average ACI over whole timeline")
                             btn_whole_plot.click(whole_year_plot, inputs= [dd_ds, radio_x_axis, radio_groupby, index_select, resolution], outputs=[whole_plot])
 
-            with gr.Tab('Clustering'):
-                with gr.Accordion('Clustering based on Acoustic Indices', open=False):
-                    with gr.Accordion('K Means', open=False):
-                        with gr.Column():
-                            with gr.Row():
-                                with gr.Column():
-                                    clustering_rep = gr.Radio([('Acoustic Indices', 'acoustic'),
-                                                       ('VAE Encodings', 'vae')],
-                                                       label="What representations to use?")
-                                    clustering_filter = gr.Radio([('Acoustic Regions', 'acoustic region'),
-                                                       ('None', 'none')],
-                                                       label="What filters to use?")
-                                    clustering_dim_red = gr.Radio([('PCA', 'pca'),
-                                                       ('t-SNE', 'tsne'), ('None', 'none')],
-                                                       label="What dimensionality reduction technique to use?")
-                                with gr.Column():
-                                    acoustic_region = gr.Dropdown(['Acoustic Region 1', 'Acoustic Region 2', 'Acoustic Region 3', 'Acoustic Region 4',
-                                                                   'Acoustic Region 5', 'Acoustic Region 6', 'Acoustic Region 7', 'Acoustic Region 8',
-                                                                   'Acoustic Region 9', 'Acoustic Region 10', 'Acoustic Region 11', 'Acoustic Region 12',
-                                                                   'Acoustic Region 13', 'Acoustic Region 14', 'Acoustic Region 15', 'Acoustic Region 16',
-                                                                   'Acoustic Region 17', 'Acoustic Region 18', 'Acoustic Region 19', 'Acoustic Region 20'],
-                                                                  label="Choose any acoustic region.")
-                                    clustering_filter.change(self.acoustic_region_display, inputs=clustering_filter, outputs=acoustic_region)
-                                    with gr.Row():
-                                        clusters_ideal = gr.Radio(['Choose the number of clusters', 'Get optimum number of clusters'], label="How to chose number of clusters", interactive=True,
-                                                                  visible=True)
-                                        max_clusters = gr.Textbox(label='Enter the maximum number of clusters to find optimum number of clusters from.', visible=False)
-                                    num_clusters = gr.Slider(minimum=1, maximum=10, value=2, step=1,
-                                                              label="Select the number of clusters", interactive=True, visible=True)
-                                    cluster_indices = gr.CheckboxGroup(['ACI', 'Ht', 'EVNtCount', 'ECV', 'EAS', 'LFC', 'HFC', 'MFC', 'Hf', 'ADI', 'AGI', 'BI'], label= 'Choose the parameters for clustering',
-                                                                       visible=False)
-                                    num_dimensions = gr.Slider(minimum=1, maximum=10, value=2, step=1,
-                                                              label="Select the number of dimensions for PCA", interactive=True, visible=False)
-                                with gr.Column():
-                                    cluster_playback = gr.Dropdown(choices=[], label="Choose any cluster to play back audios.", interactive=True)
-                                    playback_audio = gr.Audio(label="Audio files from the selected cluster")
-                            btn_clusters =gr.Button('Plot Clusters', interactive=True)
-                            with gr.Row():
-                                clusters_pic = gr.Plot(label="Clusters based on k-means")
-                                clusters_pic.change(fn=self.cluster_options_update, inputs=[clustering_dim_red],
-                                                    outputs=[cluster_playback])
-                                sil_score = gr.Plot(label="Best number of clusters based on Silhouette Scores", visible=False)
+            with gr.Tab('Clustering Panel'):
+                with gr.Accordion('Perform Clustering', open=False):
+                    with gr.Column():
+                        with gr.Row():
+                            with gr.Column():
+                                clustering_mode = gr.Radio([('K-Means', 'k_means'),
+                                                   ('HDBSCAN', 'hdbscan')],
+                                                   label="What clustering mode to use?")
+                                clustering_mode.change(fn=update_clustering_mode, inputs=[clustering_mode])
+                                clustering_rep = gr.Radio([('Acoustic Indices', 'acoustic_indices'),
+                                                   ('VAE Encodings', 'vae')],
+                                                   label="What representations to use?")
+                                clustering_rep.change(fn=update_clustering_rep, inputs=[clustering_rep])
+                                clustering_filter = gr.Radio([('Acoustic Regions', 'acoustic region'),
+                                                   ('None', 'none')],
+                                                   label="What filters to use?")
+                                clustering_filter.change(fn=update_clustering_filter, inputs=[clustering_filter])
+                                clustering_dim_red = gr.Radio([('PCA', 'pca'),
+                                                   ('t-SNE', 'tsne'), ('None', 'none')],
+                                                   label="What dimensionality reduction technique to use?")
+                                clustering_dim_red.change(fn=update_dim_red, inputs=[clustering_dim_red])
 
-                    with gr.Accordion('Hierarchical Clustering', open=False):
+                            with gr.Column():
+                                acoustic_region = gr.Dropdown(['Acoustic Region 1', 'Acoustic Region 2', 'Acoustic Region 3', 'Acoustic Region 4',
+                                                               'Acoustic Region 5', 'Acoustic Region 6', 'Acoustic Region 7', 'Acoustic Region 8',
+                                                               'Acoustic Region 9', 'Acoustic Region 10', 'Acoustic Region 11', 'Acoustic Region 12',
+                                                               'Acoustic Region 13', 'Acoustic Region 14', 'Acoustic Region 15', 'Acoustic Region 16',
+                                                               'Acoustic Region 17', 'Acoustic Region 18', 'Acoustic Region 19', 'Acoustic Region 20'],
+                                                              label="Choose any acoustic region.")
+                                clustering_filter.change(self.acoustic_region_display, inputs=clustering_filter, outputs=acoustic_region)
+                                with gr.Row():
+                                    clusters_ideal = gr.Radio(['Choose the number of clusters', 'Get optimum number of clusters'], label="How to chose number of clusters", interactive=True,
+                                                              visible=True)
+                                    max_clusters = gr.Textbox(label='Enter the maximum number of clusters to find optimum number of clusters from.', visible=False)
+                                num_clusters = gr.Slider(minimum=1, maximum=10, value=2, step=1,
+                                                          label="Select the number of clusters", interactive=True, visible=True)
+                                cluster_indices = gr.CheckboxGroup(['ACI', 'Ht', 'EVNtCount', 'ECV', 'EAS', 'LFC', 'HFC', 'MFC', 'Hf', 'ADI', 'AGI', 'BI'], label= 'Choose the parameters for clustering',
+                                                                   visible=False)
+                                num_dimensions = gr.Slider(minimum=1, maximum=10, value=2, step=1,
+                                                          label="Select the number of dimensions for PCA", interactive=True, visible=False)
+                            with gr.Column():
+                                cluster_playback = gr.Dropdown(choices=[], label="Choose any cluster to play back audios.", interactive=True)
+                                playback_audio = gr.Audio(label="Audio files from the selected cluster")
+                        btn_clusters =gr.Button('Plot Clusters', interactive=True)
+                        with gr.Row():
+                            clusters_pic = gr.Plot(label="Clusters based on k-means")
+                            sil_score = gr.Plot(label="Best number of clusters based on Silhouette Scores", visible=False)
+
+                    # with gr.Accordion('Hierarchical Clustering', open=False):
+                    #     with gr.Row():
+                    #         gr.HTML(
+                    #             """
+                    #                 <strong>Note: The choice of acoustic indices or dimensions of PCA would be taken from the previous calculations from K-Means.</strong>
+                    #             """
+                    #         )
+                    #         num_clusters_hierar = gr.Slider(minimum=1, maximum=10, value=2, step=1,
+                    #                                         label="Select the number of clusters", interactive=True,
+                    #                                         visible=True)
+                    #         clustering_param_hierar = gr.Radio([('Use acoustic indices directly', 'acoustic'),
+                    #                                    ('Use principal component analysis on acoustic indices', 'pca')],
+                    #                                    label="How to cluster?")
+                    #         btn_hierarchical = gr.Button("Perform hierarchical clustering", interactive=True)
+                    #
+                    #     with gr.Row():
+                    #         ward_linkage = gr.Image(label="Ward Linkage Using Eucledean Distance")
+                    #         hierar_clusters = gr.Plot(label="Clusters based on Hierarchical Clustering")
+                    #         btn_hierarchical.click(fn=hierarchical_clustering,
+                    #                                inputs=[num_clusters_hierar, clustering_param_hierar, cluster_indices], outputs=[ward_linkage, hierar_clusters])
+                with gr.Accordion('Cluster Occurrences', open=False):
+                    with gr.Accordion('Bar Plots', open=False):
+                        gr.Markdown(
+                            '<span style="color:#575757;font-size:18px">Barplot for cluster occurrences</span>')
                         with gr.Row():
                             gr.HTML(
                                 """
-                                    <strong>Note: The choice of acoustic indices or dimensions of PCA would be taken from the previous calculations from K-Means.</strong>
+                                    <strong>Note: To view the results, you need to perform the clustering first.</strong>
                                 """
                             )
-                            num_clusters_hierar = gr.Slider(minimum=1, maximum=10, value=2, step=1,
-                                                            label="Select the number of clusters", interactive=True,
-                                                            visible=True)
-                            clustering_param_hierar = gr.Radio([('Use acoustic indices directly', 'acoustic'),
-                                                       ('Use principal component analysis on acoustic indices', 'pca')],
-                                                       label="How to cluster?")
-                            btn_hierarchical = gr.Button("Perform hierarchical clustering", interactive=True)
+                            which_cluster_result_bar = gr.Radio([('Using PCA', 'pca'), ('None', 'acoustic')],
+                                                      label='Which clustering results to use (Dimensionality reduction technique)')
+                            which_cluster = gr.Dropdown(choices=['demo value 1', 'demo value 2'], label='Select the cluster',
+                                                         interactive=True)
+                            cluster_x_axis = gr.Radio(['Year cycle', 'Diel cycle', 'Linear cycle'],
+                                                      label='Select the range for x axis')
+                            cluster_hue_b = gr.Radio(['year', 'month', 'day', 'hour'],
+                                                   label='Select the grouping by option')
+                            which_cluster_result_bar.change(fn=self.cluster_options_update, inputs=which_cluster_result_bar, outputs=[which_cluster])
 
                         with gr.Row():
-                            ward_linkage = gr.Image(label="Ward Linkage Using Eucledean Distance")
-                            hierar_clusters = gr.Plot(label="Clusters based on Hierarchical Clustering")
-                            btn_hierarchical.click(fn=hierarchical_clustering,
-                                                   inputs=[num_clusters_hierar, clustering_param_hierar, cluster_indices], outputs=[ward_linkage, hierar_clusters])
-                    with gr.Accordion('Cluster Occurrences', open=False):
-                        with gr.Accordion('Bar Plots', open=False):
-                            gr.Markdown(
-                                '<span style="color:#575757;font-size:18px">Barplot for cluster occurrences</span>')
-                            with gr.Row():
-                                gr.HTML(
-                                    """
-                                        <strong>Note: To view the results, you need to perform the clustering first.</strong>
-                                    """
-                                )
-                                which_cluster_result_bar = gr.Radio([('Using PCA', 'pca'), ('None', 'acoustic')],
-                                                          label='Which clustering results to use (Dimensionality reduction technique)')
-                                which_cluster = gr.Dropdown(choices=['demo value 1', 'demo value 2'], label='Select the cluster',
-                                                             interactive=True)
-                                cluster_x_axis = gr.Radio(['Year cycle', 'Diel cycle', 'Linear cycle'],
-                                                          label='Select the range for x axis')
-                                cluster_hue_b = gr.Radio(['year', 'month', 'day', 'hour'],
-                                                       label='Select the grouping by option')
-                                which_cluster_result_bar.change(fn=self.cluster_options_update, inputs=which_cluster_result_bar, outputs=[which_cluster])
+                            btn_occurrences_bar = gr.Button("Generate Barplot", interactive=True)
 
-                            with gr.Row():
-                                btn_occurrences_bar = gr.Button("Generate Barplot", interactive=True)
+                        with gr.Row():
+                            clusters_bar = gr.Plot()
+                            btn_occurrences_bar.click(fn=cluster_occurrence_bar,
+                                                      inputs=[which_cluster, cluster_x_axis, cluster_hue_b, which_cluster_result_bar],
+                                                      outputs=clusters_bar)
 
-                            with gr.Row():
-                                clusters_bar = gr.Plot()
-                                btn_occurrences_bar.click(fn=cluster_occurrence_bar,
-                                                          inputs=[which_cluster, cluster_x_axis, cluster_hue_b, which_cluster_result_bar],
-                                                          outputs=clusters_bar)
-
-                        with gr.Accordion('24h Rose Plots', open=False):
-                            with gr.Row():
-                                which_cluster_result_rose = gr.Radio([('Using PCA', 'pca'), ('None', 'acoustic')],
-                                                                    label='Which clustering results to use (Dimensionality reduction technique)')
-                                which_cluster_r = gr.Dropdown(choices=['demo value 1', 'demo value 2'], label='Select the cluster',
-                                                              interactive=False)
-                                cluster_hue_r = gr.Radio(['Year', 'Month', 'Day'],
-                                                         label='Select the grouping by option')
-                                which_cluster_result_rose.change(fn=self.cluster_options_update, inputs=which_cluster_result_rose, outputs=[which_cluster_r])
+                    with gr.Accordion('24h Rose Plots', open=False):
+                        with gr.Row():
+                            which_cluster_result_rose = gr.Radio([('Using PCA', 'pca'), ('None', 'acoustic')],
+                                                                label='Which clustering results to use (Dimensionality reduction technique)')
+                            which_cluster_r = gr.Dropdown(choices=['demo value 1', 'demo value 2'], label='Select the cluster',
+                                                          interactive=False)
+                            cluster_hue_r = gr.Radio(['Year', 'Month', 'Day'],
+                                                     label='Select the grouping by option')
+                            which_cluster_result_rose.change(fn=self.cluster_options_update, inputs=which_cluster_result_rose, outputs=[which_cluster_r])
 
                             with gr.Row():
                                 btn_occurrences_rose = gr.Button("Generate Rose Plot", interactive=True)
@@ -275,7 +280,6 @@ class FrontEndLite:
                             clustering_dim_red.change(fn=self.clustering_options_dim, inputs=clustering_dim_red, outputs=[num_dimensions, cluster_indices])
                             clusters_ideal.change(fn=self.ideal_clustering, inputs=clusters_ideal,
                                                   outputs=[num_clusters, sil_score, max_clusters])
-        # All event listeners
 
         self.app = demo
 

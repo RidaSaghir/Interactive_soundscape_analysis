@@ -13,6 +13,11 @@ from acoustic_region_filter import region_filter
 config = json.load(open('config.json', ))
 PATH_DATA = config["PATH_DATA"]
 last_dataset = config["last_dataset"]
+clustering_rep = config["clustering_rep"]
+clustering_mode = config["clustering_mode"]
+dim_red_mode = config["dim_red_mode"]
+clustering_filter = config["clustering_filter"]
+
 PATH_EXP = os.path.join(os.path.dirname(PATH_DATA), 'exp')
 csv_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, "all_indices.csv")
 class ClusteringVisualizer:
