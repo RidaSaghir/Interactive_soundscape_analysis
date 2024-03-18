@@ -9,8 +9,6 @@ config = json.load(open('config.json'))
 path_data = config["PATH_DATA"]
 last_dataset = config["last_dataset"]
 
-csv_file_path = os.path.join(os.path.dirname(path_data), "exp", last_dataset, "all_indices.csv")
-df = pd.read_csv(csv_file_path)
 
 ref_1 = datetime.strptime("5:30", "%H:%M")
 ref_2 = datetime.strptime("9:00", "%H:%M")
@@ -33,7 +31,6 @@ def region_filter(df, region):
     elif region in [17, 18, 19, 20]:
         filtered_df = df[(df['Date Time'].dt.time >= ref_4.time()) & (df['Date Time'].dt.time <= ref_5.time())]
 
-    print(filtered_df)
     # Resetting index so that the missing indexes do not cause problems ahead
     filtered_df = filtered_df.reset_index(drop=True)
     freq_ranges = {
@@ -46,7 +43,6 @@ def region_filter(df, region):
 
     indexes = []
     # Using ast.literal_eval because the frequencies list had type string
-    print(filtered_df['frequencies'])
     for i, value in enumerate(ast.literal_eval(filtered_df['frequencies'].iloc[0])):
         if value >= freq_min and value < freq_max:
             indexes.append(i)
@@ -73,6 +69,12 @@ def region_filter(df, region):
 
     new_filtered_df = pd.DataFrame(new_filtered_df)
     selected_cols.remove('Date Time')
+    for col in selected_cols:
+        for x in range(len(new_filtered_df)):
+            val = new_filtered_df.loc[x, col]
+            value = sum(val) / len(val)
+            new_filtered_df.loc[x, col] = value
+
     return new_filtered_df, selected_cols
 
 
