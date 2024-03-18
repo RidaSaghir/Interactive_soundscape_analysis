@@ -20,7 +20,6 @@ PATH_EXP = os.path.join(os.path.dirname(PATH_DATA), 'exp')
 
 clustering = ClusteringVisualizer()
 
-
 class FrontEndLite:
     def __init__(self, server_name=None, server_port=None):
         self.server_name = server_name or 'localhost'
@@ -50,8 +49,8 @@ class FrontEndLite:
         else:
             return gr.Dropdown(visible=False)
 
-    def clustering_options_dim(self, selected_option):
-        if selected_option == 'pca':
+    def num_dimension_components(self, selected_option):
+        if selected_option in ['pca', 'tsne']:
             return gr.Slider(visible=True), gr.Radio(visible=False)
         elif selected_option == 'none':
             return gr.Slider(visible=False), gr.Radio(visible=True)
@@ -162,7 +161,7 @@ class FrontEndLite:
                         with gr.Row():
                             with gr.Column():
                                 clustering_mode = gr.Radio([('K-Means', 'k_means'),
-                                                   ('HDBSCAN', 'hdbscan')],
+                                                   ('HDBSCAN', 'hdbscan'), ('DBSCAN', 'dbscan')],
                                                    label="What clustering mode to use?")
                                 clustering_mode.change(fn=update_clustering_mode, inputs=[clustering_mode])
                                 clustering_rep = gr.Radio([('Acoustic Indices', 'acoustic_indices'),
@@ -173,10 +172,10 @@ class FrontEndLite:
                                                    ('None', 'none')],
                                                    label="What filters to use?")
                                 clustering_filter.change(fn=update_clustering_filter, inputs=[clustering_filter])
-                                clustering_dim_red = gr.Radio([('PCA', 'pca'),
+                                dim_red = gr.Radio([('PCA', 'pca'),
                                                    ('t-SNE', 'tsne'), ('None', 'none')],
                                                    label="What dimensionality reduction technique to use?")
-                                clustering_dim_red.change(fn=update_dim_red, inputs=[clustering_dim_red])
+                                dim_red.change(fn=update_dim_red, inputs=[dim_red])
 
                             with gr.Column():
                                 acoustic_region = gr.Dropdown(['Acoustic Region 1', 'Acoustic Region 2', 'Acoustic Region 3', 'Acoustic Region 4',
@@ -192,7 +191,7 @@ class FrontEndLite:
                                     max_clusters = gr.Textbox(label='Enter the maximum number of clusters to find optimum number of clusters from.', visible=False)
                                 num_clusters = gr.Slider(minimum=1, maximum=10, value=2, step=1,
                                                           label="Select the number of clusters", interactive=True, visible=True)
-                                cluster_indices = gr.CheckboxGroup(['ACI', 'Ht', 'EVNtCount', 'ECV', 'EAS', 'LFC', 'HFC', 'MFC', 'Hf', 'ADI', 'AGI', 'BI'], label= 'Choose the parameters for clustering',
+                                chosen_indices = gr.CheckboxGroup(['ACI', 'Ht', 'EVNtCount', 'ECV', 'EAS', 'LFC', 'HFC', 'MFC', 'Hf', 'ADI', 'AGI', 'BI'], label= 'Choose the parameters for clustering',
                                                                    visible=False)
                                 num_dimensions = gr.Slider(minimum=1, maximum=10, value=2, step=1,
                                                           label="Select the number of dimensions for PCA", interactive=True, visible=False)
@@ -223,7 +222,7 @@ class FrontEndLite:
                     #         ward_linkage = gr.Image(label="Ward Linkage Using Eucledean Distance")
                     #         hierar_clusters = gr.Plot(label="Clusters based on Hierarchical Clustering")
                     #         btn_hierarchical.click(fn=hierarchical_clustering,
-                    #                                inputs=[num_clusters_hierar, clustering_param_hierar, cluster_indices], outputs=[ward_linkage, hierar_clusters])
+                    #                                inputs=[num_clusters_hierar, clustering_param_hierar, chosen_indices], outputs=[ward_linkage, hierar_clusters])
                 with gr.Accordion('Cluster Occurrences', open=False):
                     with gr.Accordion('Bar Plots', open=False):
                         gr.Markdown(
@@ -272,12 +271,12 @@ class FrontEndLite:
                                                                   which_cluster_result_rose],
                                                           outputs=clusters_rose)
 
-                            btn_clusters.click(clustering.kmeans_clustering,
-                                               [clustering_rep, clustering_filter, acoustic_region, clustering_dim_red, num_dimensions, cluster_indices, clusters_ideal, num_clusters,
+                            btn_clusters.click(clustering.clustering,
+                                               [acoustic_region, num_dimensions, chosen_indices, clusters_ideal, num_clusters,
                                                  max_clusters],
                                                outputs=[clusters_pic, sil_score])
-                            clustering_rep.change(fn=self.clustering_options_rep, inputs=clustering_rep, outputs=[cluster_indices])
-                            clustering_dim_red.change(fn=self.clustering_options_dim, inputs=clustering_dim_red, outputs=[num_dimensions, cluster_indices])
+                            clustering_rep.change(fn=self.clustering_options_rep, inputs=clustering_rep, outputs=[chosen_indices])
+                            dim_red.change(fn=self.num_dimension_components, inputs=dim_red, outputs=[num_dimensions, chosen_indices])
                             clusters_ideal.change(fn=self.ideal_clustering, inputs=clusters_ideal,
                                                   outputs=[num_clusters, sil_score, max_clusters])
 
