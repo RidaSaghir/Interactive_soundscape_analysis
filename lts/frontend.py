@@ -99,13 +99,10 @@ class FrontEndLite:
                         ds_choices, ds_value = list_datasets()
                         dd_ds = gr.Dropdown(
                             choices=ds_choices, value=ds_value, label='Select')
-                        dd_ds.change(update_last_dataset, dd_ds)
+
                         btn_load = gr.Button(value='Summarise for acoustic indices', size='sm')
                         btn_compute = gr.Button(label= 'Compute', value='Compute indices', size='sm')
                         txt_out = gr.Textbox(value='Waiting', label='Status')
-                        btn_load.click(fn=summarise_dataset, inputs=dd_ds, outputs=txt_out)
-                        btn_compute.click(fn=compute_indices, inputs=[dd_ds, btn_compute], outputs=[txt_out])
-                        txt_out.change(fn=self.recompute, inputs=[txt_out], outputs=[btn_compute])
                     with gr.Row():
                         btn_summarise_vae = gr.Button(value='Summarise for VAE encodings', size='sm')
                         with gr.Column():
@@ -147,13 +144,10 @@ class FrontEndLite:
                         note = gr.Text(
                             value="With this option, there could be only 2 resolutions possible i.e 'Hourly' and 'Minutes'",
                             label="Note:", visible=False)
-                        radio_x_axis.change(self.note_msg, inputs=radio_x_axis, outputs=note)
-
                     with gr.Row():
                         with gr.Column():
                             btn_whole_plot = gr.Button("Plot results")
                             whole_plot = gr.Plot(label="Average ACI over whole timeline")
-                            btn_whole_plot.click(whole_year_plot, inputs= [dd_ds, radio_x_axis, radio_groupby, index_select, resolution], outputs=[whole_plot])
 
             with gr.Tab('Clustering Panel'):
                 with gr.Accordion('Perform Clustering', open=False):
@@ -163,19 +157,15 @@ class FrontEndLite:
                                 clustering_mode = gr.Radio([('K-Means', 'k_means'),
                                                    ('HDBSCAN', 'hdbscan'), ('DBSCAN', 'dbscan')],
                                                    label="What clustering mode to use?")
-                                clustering_mode.change(fn=update_clustering_mode, inputs=[clustering_mode])
                                 clustering_rep = gr.Radio([('Acoustic Indices', 'acoustic_indices'),
                                                    ('VAE Encodings', 'vae')],
                                                    label="What representations to use?")
-                                clustering_rep.change(fn=update_clustering_rep, inputs=[clustering_rep])
                                 clustering_filter = gr.Radio([('Acoustic Regions', 'acoustic region'),
                                                    ('None', 'none')],
                                                    label="What filters to use?")
-                                clustering_filter.change(fn=update_clustering_filter, inputs=[clustering_filter])
                                 dim_red = gr.Radio([('PCA', 'pca'),
                                                    ('t-SNE', 'tsne'), ('None', 'none')],
                                                    label="What dimensionality reduction technique to use?")
-                                dim_red.change(fn=update_dim_red, inputs=[dim_red])
 
                             with gr.Column():
                                 acoustic_region = gr.Dropdown(['Acoustic Region 1', 'Acoustic Region 2', 'Acoustic Region 3', 'Acoustic Region 4',
@@ -241,16 +231,11 @@ class FrontEndLite:
                                                       label='Select the range for x axis')
                             cluster_hue_b = gr.Radio(['year', 'month', 'day', 'hour'],
                                                    label='Select the grouping by option')
-                            which_cluster_result_bar.change(fn=self.cluster_options_update, inputs=which_cluster_result_bar, outputs=[which_cluster])
-
                         with gr.Row():
                             btn_occurrences_bar = gr.Button("Generate Barplot", interactive=True)
 
                         with gr.Row():
                             clusters_bar = gr.Plot()
-                            btn_occurrences_bar.click(fn=cluster_occurrence_bar,
-                                                      inputs=[which_cluster, cluster_x_axis, cluster_hue_b, which_cluster_result_bar],
-                                                      outputs=clusters_bar)
 
                     with gr.Accordion('24h Rose Plots', open=False):
                         with gr.Row():
@@ -260,25 +245,51 @@ class FrontEndLite:
                                                           interactive=False)
                             cluster_hue_r = gr.Radio(['Year', 'Month', 'Day'],
                                                      label='Select the grouping by option')
-                            which_cluster_result_rose.change(fn=self.cluster_options_update, inputs=which_cluster_result_rose, outputs=[which_cluster_r])
-
                             with gr.Row():
                                 btn_occurrences_rose = gr.Button("Generate Rose Plot", interactive=True)
                             with gr.Row():
                                 clusters_rose = gr.Plot()
-                                btn_occurrences_rose.click(fn=cluster_occurrence_rose,
-                                                          inputs=[which_cluster_r, cluster_hue_r,
-                                                                  which_cluster_result_rose],
-                                                          outputs=clusters_rose)
 
-                            btn_clusters.click(clustering.clustering,
-                                               [acoustic_region, num_dimensions, chosen_indices, clusters_ideal, num_clusters,
-                                                 max_clusters],
-                                               outputs=[clusters_pic, sil_score])
-                            clustering_rep.change(fn=self.clustering_options_rep, inputs=clustering_rep, outputs=[chosen_indices])
-                            dim_red.change(fn=self.num_dimension_components, inputs=dim_red, outputs=[num_dimensions, chosen_indices])
-                            clusters_ideal.change(fn=self.ideal_clustering, inputs=clusters_ideal,
-                                                  outputs=[num_clusters, sil_score, max_clusters])
+            # ALL EVENT LISTENERS
+
+            # For data set
+            dd_ds.change(update_last_dataset, dd_ds)
+            btn_load.click(fn=summarise_dataset, inputs=dd_ds, outputs=txt_out)
+            btn_compute.click(fn=compute_indices, inputs=[dd_ds, btn_compute], outputs=[txt_out])
+            txt_out.change(fn=self.recompute, inputs=[txt_out], outputs=[btn_compute])
+
+            # For time series plot
+            radio_x_axis.change(self.note_msg, inputs=radio_x_axis, outputs=note)
+            btn_whole_plot.click(whole_year_plot, inputs=[dd_ds, radio_x_axis, radio_groupby, index_select, resolution],
+                                 outputs=[whole_plot])
+
+
+            # For clustering
+            clustering_mode.change(fn=update_clustering_mode, inputs=[clustering_mode])
+            clusters_ideal.change(fn=self.ideal_clustering, inputs=clusters_ideal,
+                                  outputs=[num_clusters, sil_score, max_clusters])
+            clustering_rep.change(fn=update_clustering_rep, inputs=[clustering_rep])
+            clustering_rep.change(fn=self.clustering_options_rep, inputs=clustering_rep, outputs=[chosen_indices])
+            clustering_filter.change(fn=update_clustering_filter, inputs=[clustering_filter])
+            dim_red.change(fn=update_dim_red, inputs=[dim_red])
+            dim_red.change(fn=self.num_dimension_components, inputs=dim_red, outputs=[num_dimensions, chosen_indices])
+            btn_clusters.click(clustering.clustering,
+                               [acoustic_region, num_dimensions, chosen_indices, clusters_ideal, num_clusters,
+                                max_clusters],
+                               outputs=[clusters_pic, sil_score])
+
+            # For cluster occurrences
+            which_cluster_result_bar.change(fn=self.cluster_options_update, inputs=which_cluster_result_bar,
+                                            outputs=[which_cluster])
+            btn_occurrences_bar.click(fn=cluster_occurrence_bar,
+                                      inputs=[which_cluster, cluster_x_axis, cluster_hue_b, which_cluster_result_bar],
+                                      outputs=clusters_bar)
+            which_cluster_result_rose.change(fn=self.cluster_options_update, inputs=which_cluster_result_rose,
+                                             outputs=[which_cluster_r])
+            btn_occurrences_rose.click(fn=cluster_occurrence_rose,
+                                       inputs=[which_cluster_r, cluster_hue_r,
+                                               which_cluster_result_rose],
+                                       outputs=clusters_rose)
 
         self.app = demo
 
