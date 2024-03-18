@@ -1,36 +1,41 @@
 
 import plotly.express as px
 import pandas as pd
-from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score
-from pca import pca
+from sklearn.cluster import KMeans, OPTICS, DBSCAN, HDBSCAN, SpectralClustering, AffinityPropagation
+from sklearn.manifold import TSNE, Isomap
 import os
 import json
 from acoustic_region_filter import region_filter
+from sklearn.decomposition import PCA
+import numpy as np
 
 
 config = json.load(open('config.json', ))
 PATH_DATA = config["PATH_DATA"]
-last_dataset = config["last_dataset"]
-clustering_rep = config["clustering_rep"]
-clustering_mode = config["clustering_mode"]
-dim_red_mode = config["dim_red_mode"]
-clustering_filter = config["clustering_filter"]
-
 PATH_EXP = os.path.join(os.path.dirname(PATH_DATA), 'exp')
-csv_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, "all_indices.csv")
+
 class ClusteringVisualizer:
     def __init__(self):
-        self.data = pd.read_csv(csv_file_path)
-        self.scaled_data = []
+
+        self.path_data = config["PATH_DATA"]
+        self.last_dataset = config["last_dataset"]
+        self.clustering_rep = config["clustering_rep"]
+        self.clustering_mode = config["clustering_mode"]
+        self.dim_red_mode = config["dim_red_mode"]
+        self.clustering_filter = config["clustering_filter"]
+        self.csv_file_path = os.path.join(os.path.dirname(self.path_data), "exp", self.last_dataset, f'{self.clustering_rep}.csv')
+        if self.csv_file_path and os.path.exists(self.csv_file_path):
+            self.data = pd.read_csv(self.csv_file_path)
+        else:
+            self.data = None
         self.optimal_clusters = None
         self.sil_score = None
-        self.df_pca = []
+
 
     def find_optimal_clusters(self, data, max_clusters):
         max_k = int(max_clusters)
-
         # Initialize variables to store the best Silhouette score and the corresponding k
         best_score = -1
         best_k = 0
@@ -41,7 +46,6 @@ class ClusteringVisualizer:
 
         for k in k_values:
             kmeans = KMeans(n_clusters=k, n_init=10)
-            #data.loc[:, 'Cluster'] = kmeans.fit_predict(data)
             cluster_labels = kmeans.fit_predict(data)
             silhouette_avg = silhouette_score(data, cluster_labels)
             silhouette_scores.append(silhouette_avg)
@@ -58,124 +62,89 @@ class ClusteringVisualizer:
 
         return best_k, fig
 
-
-    def kmeans_clustering(self, clustering_rep, clustering_filter, acoustic_region, clustering_dim_red, num_dim, columns,
-                          clusters_ideal, num_clusters, max_clusters):
-        # To start over with fresh data when new clustering params are selected
-        self.data = pd.read_csv(csv_file_path)
-        print(csv_file_path)
-        # Todo: Organize and reduce the code
-        if clustering_rep == 'acoustic':
-            if clustering_filter == 'acoustic region':
-                file_name_csv = 'clustered_indices_regions.csv'
-                region_filtered_df, selected_columns = region_filter(self.data, acoustic_region)
-                for col in region_filtered_df[selected_columns]:
-                    for x in range(len(region_filtered_df)):
-                        val = region_filtered_df.loc[x, col]
-                        value = sum(val) / len(val)
-                        region_filtered_df.loc[x, col] = value
-
-                selected_data = region_filtered_df[selected_columns]
-
-                if clustering_dim_red == 'pca':
-                    self.df_pca, result_df, columns = pca(region_filtered_df, num_dim, selected_columns)
-                    if clusters_ideal == 'Get optimum number of clusters':
-                        self.optimal_clusters, self.sil_score = self.find_optimal_clusters(self.df_pca, max_clusters)
-                    elif clusters_ideal == 'Choose the number of clusters':
-                        self.optimal_clusters = num_clusters
-
-                    # Apply K-Means clustering
-                    kmeans = KMeans(n_clusters=self.optimal_clusters)
-                    region_filtered_df['KMeans_Cluster'] = kmeans.fit_predict(self.df_pca)
-                    # Remove existing PCA columns from the DataFrame
-                    existing_pca_columns = [col for col in region_filtered_df.columns if
-                                            col.startswith('Principal Component')]
-                    region_filtered_df = region_filtered_df.drop(columns=existing_pca_columns, errors='ignore')
-                    # Concatenate the new PCA columns (the whole original dataframe concatenated with PCs)
-                    self.data = pd.concat([region_filtered_df, self.df_pca], axis=1)
-
-                elif clustering_dim_red == 'none':
-
-                    self.data = region_filtered_df
-                    columns = selected_columns
-                    # Standardize the data
-                    scaler = StandardScaler()
-                    self.scaled_data = scaler.fit_transform(selected_data)
-                    scaled_df = pd.DataFrame(self.scaled_data, columns=selected_data.columns)
-
-                    if clusters_ideal == 'Get optimum number of clusters':
-                        self.optimal_clusters, self.sil_score = self.find_optimal_clusters(scaled_df, max_clusters)
-                    elif clusters_ideal == 'Choose the number of clusters':
-                        self.optimal_clusters = num_clusters
-
-                    # Apply K-Means clustering
-                    kmeans = KMeans(n_clusters=self.optimal_clusters)
-                    self.data['KMeans_Cluster'] = kmeans.fit_predict(self.scaled_data)
-
-            elif clustering_filter == 'none':
-                if clustering_dim_red == 'pca':
-                    file_name_csv = 'clustered_indices_pca.csv'
-                    # TODO: Find out why column AGI is giving errors : Too large for dtype(float64)
-                    selected_columns = ['ACI', 'Ht', 'EVNtCount', 'ECV', 'EAS', 'LFC', 'HFC', 'MFC', 'Hf', 'ADI',
-                         'BI']  # Add other indices as needed
-                    # Data already scaled in PCA function
-                    self.df_pca, result_df, columns = pca(self.data, num_dim, selected_columns)
-                    if clusters_ideal == 'Get optimum number of clusters':
-                        self.optimal_clusters, self.sil_score = self.find_optimal_clusters(self.df_pca, max_clusters)
-                    elif clusters_ideal == 'Choose the number of clusters':
-                        self.optimal_clusters = num_clusters
-
-                    # Apply K-Means clustering
-                    kmeans = KMeans(n_clusters=self.optimal_clusters)
-                    self.data['KMeans_Cluster'] = kmeans.fit_predict(self.df_pca)
-                    # Remove existing PCA columns from the DataFrame
-                    existing_pca_columns = [col for col in self.data.columns if col.startswith('Principal Component')]
-                    self.data = self.data.drop(columns=existing_pca_columns, errors='ignore')
-                    # Concatenate the new PCA columns (the whole original dataframe concatenated with PCs)
-                    self.data = pd.concat([self.data, self.df_pca], axis=1)
-
-
-                if clustering_dim_red == 'none':
-                    file_name_csv = 'clustered_indices.csv'
-                    # Select the columns for clustering
-                    selected_data = self.data[columns]
-                    # Standardize the data
-                    scaler = StandardScaler()
-                    self.scaled_data = scaler.fit_transform(selected_data)
-                    scaled_df = pd.DataFrame(self.scaled_data, columns=selected_data.columns)
-
-                    if clusters_ideal == 'Get optimum number of clusters':
-                        self.optimal_clusters, self.sil_score = self.find_optimal_clusters(scaled_df, max_clusters)
-                    elif clusters_ideal == 'Choose the number of clusters':
-                        self.optimal_clusters = num_clusters
-
-                    # Apply K-Means clustering
-                    kmeans = KMeans(n_clusters=self.optimal_clusters)
-                    self.data['KMeans_Cluster'] = kmeans.fit_predict(self.scaled_data)
+    def scaler(self, df):
+        scaler = StandardScaler()
+        try:
+            if np.isinf(df).any().any():
+                df = df.replace([np.inf, -np.inf], np.nan)
+                df = df.dropna(axis=1)  # Will drop the rows having nan values (data points of audio files)
+        except Exception as e:
+            print(f'{e}')
+        scaled_data = scaler.fit_transform(df)
+        self.scaled_df = pd.DataFrame(scaled_data)
+        return self.scaled_df
 
 
 
-        # Create a dictionary to store cluster members (file names)
-        cluster_members = {i: [] for i in range(self.optimal_clusters)}
-        # Populate the cluster members dictionary
-        for idx, row in self.data.iterrows():
-            cluster_label = row['KMeans_Cluster']
-            file_name = row.index
-            cluster_members[cluster_label].append(file_name)
+    def clustering(self, acoustic_region, num_dim, indices, clusters_ideal, num_clusters, max_clusters):
+        # Read all values from .json again
+        config = json.load(open('config.json', ))
+        self.path_data = config["PATH_DATA"]
+        self.last_dataset = config["last_dataset"]
+        self.clustering_rep = config["clustering_rep"]
+        self.clustering_mode = config["clustering_mode"]
+        self.dim_red_mode = config["dim_red_mode"]
+        self.clustering_filter = config["clustering_filter"]
+        self.csv_file_path = os.path.join(os.path.dirname(self.path_data), "exp", self.last_dataset,
+                                          f'{self.clustering_rep}.csv')
+        if self.csv_file_path and os.path.exists(self.csv_file_path):
+            self.data = pd.read_csv(self.csv_file_path)
+        else:
+            self.data = None
+        self.data = pd.read_csv(self.csv_file_path, index_col=0)
 
-        # Plot the clusters
+        # TODO: Redo this part of code for acoustic filter
+        if self.clustering_filter == 'acoustic region':
+            # selected cols have per_bin indices (without date time info)
+            self.data, selected_cols = region_filter(self.data, acoustic_region)
+            scaled_df = self.scaler(self.data[selected_cols])
+        else:
+            per_bin_columns = [col for col in self.data.columns if 'per_bin' in col]
+            to_scale = self.data.drop(['Date'] + ['frequencies'] + ['LTS'] + per_bin_columns, axis=1).copy()
+            scaled_df = self.scaler(to_scale).dropna(axis=1)
+            scaled_df = scaled_df.set_index(self.data.index)
+            self.data = pd.concat([self.data['Date'], scaled_df], axis=1)
+
+
+
+        # Clustering Methods
+        if self.clustering_mode == 'k_means':
+            if clusters_ideal == 'Get optimum number of clusters':
+                self.optimal_clusters, self.sil_score = self.find_optimal_clusters(scaled_df, max_clusters)
+            elif clusters_ideal == 'Choose the number of clusters':
+                self.optimal_clusters = num_clusters
+            cluster_labels = KMeans(n_clusters=self.optimal_clusters, random_state=42, n_init='auto').fit_predict(scaled_df)
+        elif self.clustering_mode == 'hdbscan':
+            cluster_labels = HDBSCAN(n_jobs=-1).fit_predict(scaled_df)
+        elif self.clustering_mode == 'dbscan':
+            cluster_labels = DBSCAN(eps=0.001, min_samples=5, n_jobs=-1).fit_predict(scaled_df)
+
+        # Dimensionality Reduction Methods
+        if self.dim_red_mode == 'pca':
+            dim_red_components = PCA(n_components=num_dim).fit_transform(scaled_df)
+        elif self.dim_red_mode == 'tsne':
+            dim_red_components = TSNE(n_components=num_dim, perplexity=min(len(scaled_df) // 2, 30), n_jobs=-1, learning_rate='auto', random_state=42).fit_transform(scaled_df)
+
+
+        component_columns = [f'{self.dim_red_mode} component {i + 1}' for i in
+                             range((dim_red_components).shape[1])]
+        self.data[component_columns] = dim_red_components
+        cluster_title = f'{self.clustering_mode} labels'
+        self.data[cluster_title] = cluster_labels
+
         colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k', 'w', 'orange', 'purple', 'pink', 'lime', 'brown', 'gray', 'indigo']
         markers = ['o', 's', 'D', '^', 'v', '<', '>', 'p', 'H', 'X', '*', '+']
 
-        self.data.to_csv(os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, file_name_csv))
+        results_csv = f'{self.clustering_rep}_{self.clustering_mode}_{self.dim_red_mode}_{self.clustering_filter}_{acoustic_region}.csv'
+        self.data.to_csv(os.path.join(os.path.dirname(PATH_DATA), "exp", self.last_dataset, results_csv))
+
         fig = px.scatter_3d(
-                self.data[self.data['KMeans_Cluster'] < self.optimal_clusters],  # Filter data for optimal clusters
-                x=columns[0],
-                y=columns[1],
-                z=columns[2],
-                color='KMeans_Cluster',
-                labels={'Cluster': 'Cluster'},
-                title='K-Means Clustering'
+                self.data,  # Filter data for optimal clusters
+                x=component_columns[0],
+                y=component_columns[1],
+                z=component_columns[2],
+                color=self.data[cluster_title],
+                title='Clustering Results'
             )
 
         return fig, self.sil_score
