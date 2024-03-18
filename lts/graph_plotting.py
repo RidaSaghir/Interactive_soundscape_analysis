@@ -10,9 +10,10 @@ config = json.load(open('config.json'))
 
 path_data = config["PATH_DATA"]
 last_dataset = config["last_dataset"]
+clustering_rep = config["clustering_rep"]
 
 def whole_year_plot(dd_ds, radio_x_axis, radio_groupby, y_var, resolution):
-    csv_file_path = os.path.join(os.path.dirname(path_data), "exp", last_dataset, "all_indices.csv")
+    csv_file_path = os.path.join(os.path.dirname(path_data), "exp", last_dataset, f'{clustering_rep}.csv')
     df = pd.read_csv(csv_file_path)
 
     df['Date'] = pd.to_datetime(df['Date'])
