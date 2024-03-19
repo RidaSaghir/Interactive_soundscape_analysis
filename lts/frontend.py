@@ -3,9 +3,10 @@ import logging
 import os
 import pandas as pd
 import gradio as gr
+import random
 
 from .utils import (compute_indices, summarise_dataset, list_datasets, update_last_dataset,
-                    update_clustering_rep, update_clustering_mode, update_clustering_filter, update_dim_red)
+                    update_clustering_rep, update_clustering_mode, update_clustering_filter, update_dim_red, update_region)
 from graph_plotting import whole_year_plot
 from clustering import ClusteringVisualizer
 from hierar_clustering import hierarchical_clustering
@@ -24,6 +25,9 @@ class FrontEndLite:
     def __init__(self, server_name=None, server_port=None):
         self.server_name = server_name or 'localhost'
         self.server_port = server_port or 7860
+        self.config = json.load(open('config.json'))
+        self.path_data = config.get('PATH_DATA')
+        self.path_exp = os.path.join(os.path.dirname(PATH_DATA), 'exp')
 
     def recompute(self, text):
         if text.endswith('?') or 'True' in text:
@@ -61,17 +65,42 @@ class FrontEndLite:
         else:
             return gr.Slider(visible=True), gr.Image(visible=False), gr.Textbox(visible=False)
 
-    def cluster_options_update(self, which_cluster_result):
-        last_dataset = config["last_dataset"]
-        if which_cluster_result == 'pca':
-            csv_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, "clustered_indices_pca.csv")
-        elif which_cluster_result == 'acoustic':
-            csv_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, "clustered_indices.csv")
+    def get_clusters(self):
+        self.config = json.load(open('config.json'))
+        csv = f'{self.config["clustering_rep"]}_{self.config["clustering_mode"]}_{self.config["dim_red_mode"]}_{self.config["clustering_filter"]}_{self.config["acoustic_region"]}.csv'
+        self.last_dataset = config["last_dataset"]
+        self.audio_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", self.last_dataset, csv)
+        if os.path.exists(self.audio_file_path):
+            df = pd.read_csv(self.audio_file_path)
+            column = f'{config["clustering_mode"]} labels'
+            unique_clusters = sorted(df[column].unique())
+            cluster_options = [f"Cluster {cluster}" for cluster in unique_clusters]
+            return (gr.Dropdown(choices=cluster_options, interactive=True),
+                    gr.Dropdown(choices=cluster_options, interactive=True),
+                    gr.Dropdown(choices=cluster_options, interactive=True))
 
-        data = pd.read_csv(csv_file_path)
-        unique_clusters = sorted(data['KMeans_Cluster'].unique())
-        cluster_options = [f"Cluster {cluster}" for cluster in unique_clusters]
-        return gr.Dropdown(choices=cluster_options, interactive=True)
+    def retrieve_audios(self, chosen_cluster):
+        df = pd.read_csv(self.audio_file_path, index_col=0)
+        cluster_number = int(chosen_cluster.split()[1])
+        cluster_title = f'{self.config["clustering_mode"]} labels'
+        filtered_df = df[df[cluster_title] == cluster_number]
+        files = []
+        for file in filtered_df.index:
+            files.append(os.path.join(os.path.dirname(PATH_DATA), "data", self.last_dataset, file))
+        random_files = random.sample(files, min(5, len(files)))
+        return (gr.Audio(value=random_files[0], visible=True), gr.Audio(value=random_files[1], visible=True),
+                gr.Audio(value=random_files[2], visible=True), gr.Audio(value=random_files[3], visible=True),
+                gr.Audio(value=random_files[4], visible=True))
+
+    def assign_label(self, chosen_cluster, cluster_label):
+        df = pd.read_csv(self.audio_file_path, index_col=0)
+        cluster_title = f'{self.config["clustering_mode"]} labels'
+        cluster_number = int(chosen_cluster.split()[1])
+        selected_rows = df[df[cluster_title] == cluster_number]
+        print(f'selected rows : {selected_rows.index}')
+        df.loc[selected_rows.index, 'assigned_labels'] = cluster_label
+        df.to_csv(self.audio_file_path)
+        return
 
     def _build_app(self):
         css = """
@@ -186,8 +215,16 @@ class FrontEndLite:
                                 num_dimensions = gr.Slider(minimum=1, maximum=10, value=2, step=1,
                                                           label="Select the number of dimensions for PCA", interactive=True, visible=False)
                             with gr.Column():
-                                cluster_playback = gr.Dropdown(choices=[], label="Choose any cluster to play back audios.", interactive=True)
-                                playback_audio = gr.Audio(label="Audio files from the selected cluster")
+                                cluster_playback = gr.Dropdown(choices=[], label="Choose any cluster to play back audios.", interactive=True, allow_custom_value=True)
+                                retrieve_clusters = gr.Button("Get cluster audios")
+                                playback_audio_1 = gr.Audio(label="Audio 1",visible= False)
+                                playback_audio_2 = gr.Audio(label="Audio 2",visible= False)
+                                playback_audio_3 = gr.Audio(label="Audio 3",visible= False)
+                                playback_audio_4 = gr.Audio(label="Audio 4",visible= False)
+                                playback_audio_5 = gr.Audio(label="Audio 5",visible= False)
+                                cluster_label = gr.Textbox(label="Assign label to cluster")
+                                submit_label = gr.Button("Submit cluster label")
+
                         btn_clusters =gr.Button('Plot Clusters', interactive=True)
                         with gr.Row():
                             clusters_pic = gr.Plot(label="Clusters based on k-means")
@@ -223,8 +260,6 @@ class FrontEndLite:
                                     <strong>Note: To view the results, you need to perform the clustering first.</strong>
                                 """
                             )
-                            which_cluster_result_bar = gr.Radio([('Using PCA', 'pca'), ('None', 'acoustic')],
-                                                      label='Which clustering results to use (Dimensionality reduction technique)')
                             which_cluster = gr.Dropdown(choices=['demo value 1', 'demo value 2'], label='Select the cluster',
                                                          interactive=True)
                             cluster_x_axis = gr.Radio(['Year cycle', 'Diel cycle', 'Linear cycle'],
@@ -239,8 +274,6 @@ class FrontEndLite:
 
                     with gr.Accordion('24h Rose Plots', open=False):
                         with gr.Row():
-                            which_cluster_result_rose = gr.Radio([('Using PCA', 'pca'), ('None', 'acoustic')],
-                                                                label='Which clustering results to use (Dimensionality reduction technique)')
                             which_cluster_r = gr.Dropdown(choices=['demo value 1', 'demo value 2'], label='Select the cluster',
                                                           interactive=False)
                             cluster_hue_r = gr.Radio(['Year', 'Month', 'Day'],
@@ -272,23 +305,24 @@ class FrontEndLite:
             clustering_rep.change(fn=self.clustering_options_rep, inputs=clustering_rep, outputs=[chosen_indices])
             clustering_filter.change(fn=update_clustering_filter, inputs=[clustering_filter])
             dim_red.change(fn=update_dim_red, inputs=[dim_red])
+            acoustic_region.change(fn=update_region, inputs=[acoustic_region])
             dim_red.change(fn=self.num_dimension_components, inputs=dim_red, outputs=[num_dimensions, chosen_indices])
             btn_clusters.click(clustering.clustering,
                                [acoustic_region, num_dimensions, chosen_indices, clusters_ideal, num_clusters,
                                 max_clusters],
-                               outputs=[clusters_pic, sil_score])
+                               outputs=[clusters_pic, sil_score,])
+            retrieve_clusters.click(fn=self.get_clusters, outputs=[cluster_playback, which_cluster, which_cluster_r])
+            cluster_playback.change(fn=self.retrieve_audios, inputs=[cluster_playback], outputs=[playback_audio_1, playback_audio_2,
+                                                                                                 playback_audio_3, playback_audio_4, playback_audio_5])
+            submit_label.click(fn=self.assign_label, inputs=[cluster_playback, cluster_label])
+
 
             # For cluster occurrences
-            which_cluster_result_bar.change(fn=self.cluster_options_update, inputs=which_cluster_result_bar,
-                                            outputs=[which_cluster])
             btn_occurrences_bar.click(fn=cluster_occurrence_bar,
-                                      inputs=[which_cluster, cluster_x_axis, cluster_hue_b, which_cluster_result_bar],
+                                      inputs=[which_cluster, cluster_x_axis, cluster_hue_b],
                                       outputs=clusters_bar)
-            which_cluster_result_rose.change(fn=self.cluster_options_update, inputs=which_cluster_result_rose,
-                                             outputs=[which_cluster_r])
             btn_occurrences_rose.click(fn=cluster_occurrence_rose,
-                                       inputs=[which_cluster_r, cluster_hue_r,
-                                               which_cluster_result_rose],
+                                       inputs=[which_cluster_r, cluster_hue_r],
                                        outputs=clusters_rose)
 
         self.app = demo
