@@ -9,15 +9,12 @@ last_dataset = config["last_dataset"]
 PATH_EXP = os.path.join(os.path.dirname(PATH_DATA), 'exp')
 
 def cluster_occurrence_bar(which_cluster, cluster_x_axis, cluster_hue_b, which_cluster_result_bar):
-    if which_cluster_result_bar == 'pca':
-        csv_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, "clustered_indices_pca.csv")
-    elif which_cluster_result_bar == 'acoustic':
-        csv_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, "clustered_indices_pca.csv")
-
-    df = pd.read_csv(csv_file_path)
+    csv = f'{config["clustering_rep"]}_{config["clustering_mode"]}_{config["dim_red_mode"]}_{config["clustering_filter"]}_{config["acoustic_region"]}.csv'
+    result_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, csv)
+    cluster_title = f'{config["clustering_mode"]} labels'
+    df = pd.read_csv(result_file_path)
     which_cluster = int(which_cluster.split()[1])
-    #Filtering the particular chosen cluster rows
-    cluster_df = df[df['KMeans_Cluster'] == int(which_cluster)]
+    cluster_df = df[df[cluster_title] == int(which_cluster)]
     cluster_df['Date'] = pd.to_datetime(df['Date'])
 
     cluster_df['Year'] = cluster_df['Date'].dt.year
@@ -60,12 +57,12 @@ def cluster_occurrence_bar(which_cluster, cluster_x_axis, cluster_hue_b, which_c
         df_count = cluster_df.groupby(cluster_df.index.date).size().reset_index(name='Count')
         df_count.set_index('Date', inplace=True)
         fig = px.bar(df_count, x=df_count.index, y='Count', color=df_count.index.year,
-                         labels={'Count': f'Occurrences of Cluster {which_cluster}'},
+                         labels={'Count of cluster occurrences': f'Occurrences of Cluster {which_cluster}'},
                          title=f'Occurrences of Cluster {which_cluster} ')
         return fig
 
     fig = px.bar(df_count, x=sec_column, y='Count', color=first_column,
-                 labels={'Count': f'Occurrences of Cluster {which_cluster}'},
-                 title=f'Occurrences of Cluster {which_cluster} ')
+                 labels=f'Occurrences of {cluster_df["assigned_labels"].iloc[0]}',
+                 title=f'Occurrences of Cluster {cluster_df["assigned_labels"].iloc[0]} ')
 
     return fig
