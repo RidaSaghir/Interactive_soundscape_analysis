@@ -93,7 +93,7 @@ class ClusteringVisualizer:
             self.data = None
         self.data = pd.read_csv(self.csv_file_path, index_col=0)
 
-        # TODO: Redo this part of code for acoustic filter
+        # TODO: the region filter donot give data frames with file names
         if self.clustering_filter == 'acoustic region':
             # selected cols have per_bin indices (without date time info)
             self.data, selected_cols = region_filter(self.data, acoustic_region)
@@ -146,6 +146,7 @@ class ClusteringVisualizer:
                 color=self.data[cluster_title],
                 title='Clustering Results'
             )
+
 
         return fig, self.sil_score
 
