@@ -41,19 +41,27 @@ def update_clustering_mode(mode):
         json.dump(config, f)
 
 def update_clustering_filter(filter):
+    if filter == 'none':
+        config['acoustic_region'] = 'none'
     config['clustering_filter'] = filter
     with open('config.json', 'w') as f:
         json.dump(config, f)
+
 
 def update_dim_red(red_mode):
     config['dim_red_mode'] = red_mode
     with open('config.json', 'w') as f:
         json.dump(config, f)
 
+def update_region(region):
+    config['acoustic_region'] = region
+    with open('config.json', 'w') as f:
+        json.dump(config, f)
+
 def summarise_dataset(dataset):
     # TODO Find out why it takes so long (>10s) to run this bit. Make it faster.
     list_wav = glob.glob(os.path.join(PATH_DATA, dataset, '**', '*.wav'), recursive=True)
-    is_computed = os.path.isfile(os.path.join(PATH_EXP, dataset, 'all_indices.csv'))
+    is_computed = os.path.isfile(os.path.join(PATH_EXP, dataset, 'acoustic_indices.csv'))
     m = f'{len(list_wav)} files found.\nIndices already computed: {is_computed}'
 
     logger.debug(f'Counting total size of {len(list_wav)} wav files')
@@ -65,7 +73,7 @@ def summarise_dataset(dataset):
 
 def compute_indices(dataset, btn_compute):
     list_wav = glob.glob(os.path.join(PATH_DATA, dataset, '**', '*.wav'), recursive=True)
-    is_computed = os.path.isfile(os.path.join(PATH_EXP, dataset, 'all_indices.csv'))
+    is_computed = os.path.isfile(os.path.join(PATH_EXP, dataset, 'acoustic_indices.csv'))
 
     if not is_computed or btn_compute == 'Recompute indices?':
         # TODO In case is_computed is True, ask whether to recompute
@@ -87,7 +95,7 @@ def compute_indices(dataset, btn_compute):
             df_indices_date = parse_date(df_indices)
             logger.info(f'Creating and saving CSV files')
             os.makedirs(os.path.join(PATH_EXP, dataset), exist_ok=True)
-            df_indices_date.to_csv(os.path.join(PATH_EXP, dataset, 'all_indices.csv'))
+            df_indices_date.to_csv(os.path.join(PATH_EXP, dataset, 'acoustic_indices.csv'))
             logger.info('Done')
             message = f'Results saved to csv.'
         else:
@@ -112,9 +120,6 @@ def _compute_indices(audio_path):
         spectral_indices, per_bin_indices = maad.features.all_spectral_alpha_indices(Sxx_power, tn, fn)
         temp_spec = temporal_indices.join(spectral_indices)
         all_indices = temp_spec.join(per_bin_indices)
-        # No normalized values for ACI in maad. That's why doing manually
-        all_indices['ACI_normalized'] = (all_indices['ACI'] - all_indices['ACI'].min()) / (all_indices['ACI'].max() - all_indices['ACI'].min())
-
         return all_indices
 
     except Exception as e:
