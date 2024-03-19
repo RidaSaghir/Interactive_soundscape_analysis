@@ -8,11 +8,11 @@ PATH_DATA = config["PATH_DATA"]
 last_dataset = config["last_dataset"]
 PATH_EXP = os.path.join(os.path.dirname(PATH_DATA), 'exp')
 
-def cluster_occurrence_bar(which_cluster, cluster_x_axis, cluster_hue_b, which_cluster_result_bar):
+def cluster_occurrence_bar(which_cluster, cluster_x_axis, cluster_hue_b):
     csv = f'{config["clustering_rep"]}_{config["clustering_mode"]}_{config["dim_red_mode"]}_{config["clustering_filter"]}_{config["acoustic_region"]}.csv'
     result_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, csv)
     cluster_title = f'{config["clustering_mode"]} labels'
-    df = pd.read_csv(result_file_path)
+    df = pd.read_csv(result_file_path, index_col=0)
     which_cluster = int(which_cluster.split()[1])
     cluster_df = df[df[cluster_title] == int(which_cluster)]
     cluster_df['Date'] = pd.to_datetime(df['Date'])
