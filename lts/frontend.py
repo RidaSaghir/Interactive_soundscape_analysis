@@ -4,10 +4,12 @@ import os
 import pandas as pd
 import gradio as gr
 import random
+from scipy.signal import butter, filtfilt
 
 from .utils import (compute_indices, summarise_dataset, list_datasets, update_last_dataset,
                     update_clustering_rep, update_clustering_mode, update_clustering_filter, update_dim_red, update_region)
 from graph_plotting import whole_year_plot
+from bandpass_audio_retrieval import filtered_audio
 from clustering import ClusteringVisualizer
 from hierar_clustering import hierarchical_clustering
 from cluster_occur_bar import cluster_occurrence_bar
@@ -68,11 +70,12 @@ class FrontEndLite:
     def get_clusters(self):
         self.config = json.load(open('config.json'))
         csv = f'{self.config["clustering_rep"]}_{self.config["clustering_mode"]}_{self.config["dim_red_mode"]}_{self.config["clustering_filter"]}_{self.config["acoustic_region"]}.csv'
-        self.last_dataset = config["last_dataset"]
+        self.last_dataset = self.config["last_dataset"]
         self.audio_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", self.last_dataset, csv)
+        print(self.audio_file_path)
         if os.path.exists(self.audio_file_path):
             df = pd.read_csv(self.audio_file_path)
-            column = f'{config["clustering_mode"]} labels'
+            column = f'{self.config["clustering_mode"]} labels'
             unique_clusters = sorted(df[column].unique())
             cluster_options = [f"Cluster {cluster}" for cluster in unique_clusters]
             return (gr.Dropdown(choices=cluster_options, interactive=True),
@@ -87,10 +90,13 @@ class FrontEndLite:
         files = []
         for file in filtered_df.index:
             files.append(os.path.join(os.path.dirname(PATH_DATA), "data", self.last_dataset, file))
-        random_files = random.sample(files, min(5, len(files)))
-        return (gr.Audio(value=random_files[0], visible=True), gr.Audio(value=random_files[1], visible=True),
-                gr.Audio(value=random_files[2], visible=True), gr.Audio(value=random_files[3], visible=True),
-                gr.Audio(value=random_files[4], visible=True))
+        output_files = random.sample(files, min(5, len(files)))
+        if self.config['acoustic_region'] != 'none':
+            output_files = filtered_audio(output_files, self.config['acoustic_region'])
+
+        return (gr.Audio(value=output_files[0], visible=True), gr.Audio(value=output_files[1], visible=True),
+                gr.Audio(value=output_files[2], visible=True), gr.Audio(value=output_files[3], visible=True),
+                gr.Audio(value=output_files[4], visible=True))
 
     def assign_label(self, chosen_cluster, cluster_label):
         df = pd.read_csv(self.audio_file_path, index_col=0)
@@ -251,7 +257,7 @@ class FrontEndLite:
                     #         btn_hierarchical.click(fn=hierarchical_clustering,
                     #                                inputs=[num_clusters_hierar, clustering_param_hierar, chosen_indices], outputs=[ward_linkage, hierar_clusters])
                 with gr.Accordion('Cluster Occurrences', open=False):
-                    with gr.Accordion('Bar Plots', open=False):
+                    with gr.Accordion('Single Cluster Plots', open=False):
                         gr.Markdown(
                             '<span style="color:#575757;font-size:18px">Barplot for cluster occurrences</span>')
                         with gr.Row():
@@ -272,16 +278,17 @@ class FrontEndLite:
                         with gr.Row():
                             clusters_bar = gr.Plot()
 
+
                     with gr.Accordion('24h Rose Plots', open=False):
                         with gr.Row():
                             which_cluster_r = gr.Dropdown(choices=['demo value 1', 'demo value 2'], label='Select the cluster',
                                                           interactive=False)
                             cluster_hue_r = gr.Radio(['Year', 'Month', 'Day'],
                                                      label='Select the grouping by option')
-                            with gr.Row():
-                                btn_occurrences_rose = gr.Button("Generate Rose Plot", interactive=True)
-                            with gr.Row():
-                                clusters_rose = gr.Plot()
+                        with gr.Row():
+                            btn_occurrences_rose = gr.Button("Generate Rose Plot", interactive=True)
+                        with gr.Row():
+                            clusters_rose = gr.Plot()
 
             # ALL EVENT LISTENERS
 
