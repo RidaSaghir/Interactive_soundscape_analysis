@@ -85,6 +85,7 @@ class ClusteringVisualizer:
         self.clustering_mode = config["clustering_mode"]
         self.dim_red_mode = config["dim_red_mode"]
         self.clustering_filter = config["clustering_filter"]
+        self.acoustic_region = config["acoustic_region"]
         self.csv_file_path = os.path.join(os.path.dirname(self.path_data), "exp", self.last_dataset,
                                           f'{self.clustering_rep}.csv')
         if self.csv_file_path and os.path.exists(self.csv_file_path):
@@ -135,7 +136,7 @@ class ClusteringVisualizer:
         colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k', 'w', 'orange', 'purple', 'pink', 'lime', 'brown', 'gray', 'indigo']
         markers = ['o', 's', 'D', '^', 'v', '<', '>', 'p', 'H', 'X', '*', '+']
 
-        results_csv = f'{self.clustering_rep}_{self.clustering_mode}_{self.dim_red_mode}_{self.clustering_filter}_{acoustic_region}.csv'
+        results_csv = f'{self.clustering_rep}_{self.clustering_mode}_{self.dim_red_mode}_{self.clustering_filter}_{self.acoustic_region}.csv'
         self.data.to_csv(os.path.join(os.path.dirname(PATH_DATA), "exp", self.last_dataset, results_csv))
 
         fig = px.scatter_3d(
