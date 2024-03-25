@@ -17,19 +17,30 @@ from cluster_occur_rose import cluster_occurrence_rose
 
 logger = logging.getLogger(__name__)
 
-config = json.load(open('config.json'))
-PATH_DATA = config.get('PATH_DATA')
-PATH_EXP = os.path.join(os.path.dirname(PATH_DATA), 'exp')
+# config = json.load(open('config.json'))
+# PATH_DATA = config.get('PATH_DATA')
+# PATH_EXP = os.path.join(os.path.dirname(PATH_DATA), 'exp')
 
+PATH_DATA = None
+last_dataset = None
+PATH_EXP = None
 clustering = ClusteringVisualizer()
 
 class FrontEndLite:
     def __init__(self, server_name=None, server_port=None):
         self.server_name = server_name or 'localhost'
         self.server_port = server_port or 7860
+
+    def load_config(self):
         self.config = json.load(open('config.json'))
-        self.path_data = config.get('PATH_DATA')
-        self.path_exp = os.path.join(os.path.dirname(PATH_DATA), 'exp')
+        self.path_data = self.config["PATH_DATA"]
+        self.last_dataset = self.config["last_dataset"]
+        self.path_exp = os.path.join(os.path.dirname(self.path_data), 'exp')
+        self.clustering_rep = self.config["clustering_rep"]
+        self.clustering_mode = self.config["clustering_mode"]
+        self.dim_red_mode = self.config["dim_red_mode"]
+        self.clustering_filter = self.config["clustering_filter"]
+        self.acoustic_region = self.config["acoustic_region"]
 
     def recompute(self, text):
         if text.endswith('?') or 'True' in text:
@@ -68,14 +79,12 @@ class FrontEndLite:
             return gr.Slider(visible=True), gr.Image(visible=False), gr.Textbox(visible=False)
 
     def get_clusters(self):
-        self.config = json.load(open('config.json'))
-        csv = f'{self.config["clustering_rep"]}_{self.config["clustering_mode"]}_{self.config["dim_red_mode"]}_{self.config["clustering_filter"]}_{self.config["acoustic_region"]}.csv'
-        self.last_dataset = self.config["last_dataset"]
-        self.audio_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", self.last_dataset, csv)
-        print(self.audio_file_path)
+        self.load_config()
+        csv = f'{self.clustering_rep}_{self.clustering_mode}_{self.dim_red_mode}_{self.clustering_filter}_{self.acoustic_region}.csv'
+        self.audio_file_path = os.path.join(os.path.dirname(self.path_data), "exp", self.last_dataset, csv)
         if os.path.exists(self.audio_file_path):
             df = pd.read_csv(self.audio_file_path)
-            column = f'{self.config["clustering_mode"]} labels'
+            column = f'{self.clustering_mode} labels'
             unique_clusters = sorted(df[column].unique())
             cluster_options = [f"Cluster {cluster}" for cluster in unique_clusters]
             return (gr.Dropdown(choices=cluster_options, interactive=True),
@@ -83,16 +92,17 @@ class FrontEndLite:
                     gr.Dropdown(choices=cluster_options, interactive=True))
 
     def retrieve_audios(self, chosen_cluster):
+        self.load_config()
         df = pd.read_csv(self.audio_file_path, index_col=0)
         cluster_number = int(chosen_cluster.split()[1])
-        cluster_title = f'{self.config["clustering_mode"]} labels'
+        cluster_title = f'{self.clustering_mode} labels'
         filtered_df = df[df[cluster_title] == cluster_number]
         files = []
         for file in filtered_df.index:
-            files.append(os.path.join(os.path.dirname(PATH_DATA), "data", self.last_dataset, file))
+            files.append(os.path.join(os.path.dirname(self.path_data), "data", self.last_dataset, file))
         output_files = random.sample(files, min(5, len(files)))
         if self.config['acoustic_region'] != 'none':
-            output_files = filtered_audio(output_files, self.config['acoustic_region'])
+            output_files = filtered_audio(output_files, self.acoustic_region)
 
         return (gr.Audio(value=output_files[0], visible=True), gr.Audio(value=output_files[1], visible=True),
                 gr.Audio(value=output_files[2], visible=True), gr.Audio(value=output_files[3], visible=True),
