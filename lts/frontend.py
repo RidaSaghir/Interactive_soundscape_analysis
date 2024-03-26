@@ -12,6 +12,7 @@ from graph_plotting import whole_year_plot
 from bandpass_audio_retrieval import filtered_audio
 from clustering import ClusteringVisualizer
 from hierar_clustering import hierarchical_clustering
+from multiple_cluster_occur import cluster_occurrence_multi
 from cluster_occur_bar import cluster_occurrence_bar
 from cluster_occur_rose import cluster_occurrence_rose
 
@@ -101,7 +102,7 @@ class FrontEndLite:
         for file in filtered_df.index:
             files.append(os.path.join(os.path.dirname(self.path_data), "data", self.last_dataset, file))
         output_files = random.sample(files, min(5, len(files)))
-        if self.config['acoustic_region'] != 'none':
+        if self.acoustic_region != 'none':
             output_files = filtered_audio(output_files, self.acoustic_region)
 
         return (gr.Audio(value=output_files[0], visible=True), gr.Audio(value=output_files[1], visible=True),
@@ -200,7 +201,7 @@ class FrontEndLite:
                         with gr.Row():
                             with gr.Column():
                                 clustering_mode = gr.Radio([('K-Means', 'k_means'),
-                                                   ('HDBSCAN', 'hdbscan'), ('DBSCAN', 'dbscan')],
+                                                   ('HDBSCAN', 'hdbscan'), ('DBSCAN', 'dbscan'), ('affinity', 'affinity')],
                                                    label="What clustering mode to use?")
                                 clustering_rep = gr.Radio([('Acoustic Indices', 'acoustic_indices'),
                                                    ('VAE Encodings', 'vae')],
@@ -209,7 +210,7 @@ class FrontEndLite:
                                                    ('None', 'none')],
                                                    label="What filters to use?")
                                 dim_red = gr.Radio([('PCA', 'pca'),
-                                                   ('t-SNE', 'tsne'), ('None', 'none')],
+                                                   ('t-SNE', 'tsne'), ('UMAP', 'umap'), ('None', 'none')],
                                                    label="What dimensionality reduction technique to use?")
 
                             with gr.Column():
@@ -267,6 +268,14 @@ class FrontEndLite:
                     #         btn_hierarchical.click(fn=hierarchical_clustering,
                     #                                inputs=[num_clusters_hierar, clustering_param_hierar, chosen_indices], outputs=[ward_linkage, hierar_clusters])
                 with gr.Accordion('Cluster Occurrences', open=False):
+                    with gr.Accordion('Multiple Cluster Plots', open=False):
+                        with gr.Row():
+                            x_average = gr.Radio([('By month', 'month'), ('By date', 'date'), ('By hour', 'hour')],
+                                                  label='Select the averaging method')
+                        with gr.Row():
+                            btn_occurrences_multi = gr.Button("Generate plot", interactive=True)
+                        with gr.Row():
+                            clusters_multi = gr.Plot()
                     with gr.Accordion('Single Cluster Plots', open=False):
                         gr.Markdown(
                             '<span style="color:#575757;font-size:18px">Barplot for cluster occurrences</span>')
@@ -335,6 +344,9 @@ class FrontEndLite:
 
 
             # For cluster occurrences
+            btn_occurrences_multi.click(fn=cluster_occurrence_multi,
+                                      inputs=[x_average],
+                                      outputs=clusters_multi)
             btn_occurrences_bar.click(fn=cluster_occurrence_bar,
                                       inputs=[which_cluster, cluster_x_axis, cluster_hue_b],
                                       outputs=clusters_bar)
