@@ -3,15 +3,31 @@ import plotly.express as px
 import os
 import json
 
-config = json.load(open('config.json'))
-PATH_DATA = config["PATH_DATA"]
-last_dataset = config["last_dataset"]
-PATH_EXP = os.path.join(os.path.dirname(PATH_DATA), 'exp')
-
+path_data = None
+last_dataset = None
+path_exp = None
+config = None
+clustering_rep = None
+clustering_mode = None
+dim_red_mode = None
+clustering_filter = None
+acoustic_region = None
+def load_config():
+    global path_data, last_dataset, path_exp, config, clustering_rep, clustering_mode, dim_red_mode, clustering_filter, acoustic_region
+    config = json.load(open('config.json'))
+    path_data = config["PATH_DATA"]
+    last_dataset = config["last_dataset"]
+    path_exp = os.path.join(os.path.dirname(path_data), 'exp')
+    clustering_rep = config["clustering_rep"]
+    clustering_mode = config["clustering_mode"]
+    dim_red_mode = config["dim_red_mode"]
+    clustering_filter = config["clustering_filter"]
+    acoustic_region = config["acoustic_region"]
 def cluster_occurrence_rose(which_cluster_r, cluster_hue_r):
-    csv = f'{config["clustering_rep"]}_{config["clustering_mode"]}_{config["dim_red_mode"]}_{config["clustering_filter"]}_{config["acoustic_region"]}.csv'
-    result_file_path = os.path.join(os.path.dirname(PATH_DATA), "exp", last_dataset, csv)
-    cluster_title = f'{config["clustering_mode"]} labels'
+    load_config()
+    csv = f'{clustering_rep}_{clustering_mode}_{dim_red_mode}_{clustering_filter}_{acoustic_region}.csv'
+    result_file_path = os.path.join(os.path.dirname(path_data), "exp", last_dataset, csv)
+    cluster_title = f'{clustering_mode} labels'
     df = pd.read_csv(result_file_path, index_col=0)
     which_cluster_r = int(which_cluster_r.split()[1])
     cluster_df = df[df[cluster_title] == int(which_cluster_r)]
