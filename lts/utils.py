@@ -1,5 +1,3 @@
-import numpy as np
-from aci_in_region import compute_ACI
 import glob
 import json
 import time
@@ -13,34 +11,52 @@ from maad import sound, features
 from date_parser import parse_date
 
 logger = logging.getLogger(__name__)
-config = json.load(open('config.json'))
-PATH_DATA = config.get('PATH_DATA')
-PATH_EXP = os.path.join(os.path.dirname(PATH_DATA), 'exp')
-logging.debug('PATH_DATA: {}'.format(PATH_DATA))
+# config = json.load(open('config.json'))
+# PATH_DATA = config.get('PATH_DATA')
+# PATH_EXP = os.path.join(os.path.dirname(PATH_DATA), 'exp')
+# logging.debug('PATH_DATA: {}'.format(PATH_DATA))
+
+def load_config():
+    config = json.load(open('config.json'))
+    path_data = config["PATH_DATA"]
+    last_dataset = config["last_dataset"]
+    path_exp = os.path.join(os.path.dirname(path_data), 'exp')
+    clustering_rep = config["clustering_rep"]
+    clustering_mode = config["clustering_mode"]
+    dim_red_mode = config["dim_red_mode"]
+    clustering_filter = config["clustering_filter"]
+    acoustic_region = config["acoustic_region"]
+    return (config, path_data, last_dataset, path_exp, clustering_rep,
+            clustering_mode, dim_red_mode, clustering_filter, acoustic_region)
 
 def list_datasets():
+    _, PATH_DATA, last_dataset, _, _, _, _, _, _ = load_config()
     ds_choices = [i for i in os.listdir(PATH_DATA) if os.path.isdir(os.path.join(PATH_DATA, i))]
-    ds_value = json.load(open('config.json')).get('last_dataset')
+    ds_value = last_dataset
     ds_value = ds_value if ds_value in ds_choices else None
     return ds_choices, ds_value
 
 
 def update_last_dataset(dataset):
+    config, _, _, _, _, _, _, _, _ = load_config()
     config['last_dataset'] = dataset
     with open('config.json', 'w') as f:
         json.dump(config, f)
 
 def update_clustering_rep(rep):
+    config, _, _, _, _, _, _, _, _ = load_config()
     config['clustering_rep'] = rep
     with open('config.json', 'w') as f:
         json.dump(config, f)
 
 def update_clustering_mode(mode):
+    config, _, _, _, _, _, _, _, _ = load_config()
     config['clustering_mode'] = mode
     with open('config.json', 'w') as f:
         json.dump(config, f)
 
 def update_clustering_filter(filter):
+    config, _, _, _, _, _, _, _, _ = load_config()
     if filter == 'none':
         config['acoustic_region'] = 'none'
     config['clustering_filter'] = filter
@@ -49,16 +65,19 @@ def update_clustering_filter(filter):
 
 
 def update_dim_red(red_mode):
+    config, _, _, _, _, _, _, _, _ = load_config()
     config['dim_red_mode'] = red_mode
     with open('config.json', 'w') as f:
         json.dump(config, f)
 
 def update_region(region):
+    config, _, _, _, _, _, _, _, _ = load_config()
     config['acoustic_region'] = region
     with open('config.json', 'w') as f:
         json.dump(config, f)
 
 def summarise_dataset(dataset):
+    config, PATH_DATA, last_dataset, PATH_EXP, _, _, _, _, _ = load_config()
     # TODO Find out why it takes so long (>10s) to run this bit. Make it faster.
     list_wav = glob.glob(os.path.join(PATH_DATA, dataset, '**', '*.wav'), recursive=True)
     is_computed = os.path.isfile(os.path.join(PATH_EXP, dataset, 'acoustic_indices.csv'))
@@ -72,6 +91,7 @@ def summarise_dataset(dataset):
     return m
 
 def compute_indices(dataset, btn_compute):
+    config, PATH_DATA, last_dataset, PATH_EXP, _, _, _, _, _ = load_config()
     list_wav = glob.glob(os.path.join(PATH_DATA, dataset, '**', '*.wav'), recursive=True)
     is_computed = os.path.isfile(os.path.join(PATH_EXP, dataset, 'acoustic_indices.csv'))
 
@@ -125,5 +145,7 @@ def _compute_indices(audio_path):
     except Exception as e:
         logger.error(f"Error processing {audio_path}: {e}")
     return None
+
+
 
 
