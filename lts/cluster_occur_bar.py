@@ -2,6 +2,7 @@ import pandas as pd
 import plotly.express as px
 import json
 import os
+from utils import load_config
 
 path_data = None
 last_dataset = None
@@ -12,20 +13,14 @@ clustering_mode = None
 dim_red_mode = None
 clustering_filter = None
 acoustic_region = None
-def load_config():
-    global path_data, last_dataset, path_exp, config, clustering_rep, clustering_mode, dim_red_mode, clustering_filter, acoustic_region
-    config = json.load(open('config.json'))
-    path_data = config["PATH_DATA"]
-    last_dataset = config["last_dataset"]
-    path_exp = os.path.join(os.path.dirname(path_data), 'exp')
-    clustering_rep = config["clustering_rep"]
-    clustering_mode = config["clustering_mode"]
-    dim_red_mode = config["dim_red_mode"]
-    clustering_filter = config["clustering_filter"]
-    acoustic_region = config["acoustic_region"]
+
+
 
 def cluster_occurrence_bar(which_cluster, cluster_x_axis, cluster_hue_b):
-    load_config()
+    (config, path_data, last_dataset, path_exp,
+     clustering_rep, clustering_mode, dim_red_mode, clustering_filter,
+     acoustic_region) = load_config()
+
     csv = f'{clustering_rep}_{clustering_mode}_{dim_red_mode}_{clustering_filter}_{acoustic_region}.csv'
     result_file_path = os.path.join(os.path.dirname(path_data), "exp", last_dataset, csv)
     cluster_title = f'{clustering_mode} labels'
