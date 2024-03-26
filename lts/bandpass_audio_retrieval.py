@@ -26,7 +26,7 @@ def filtered_audio(files, region):
     region = (region.split()[2])
 
     if region in ['1', '5', '9', '13', '17']:
-        low = 0
+        low = 0.01
         high = 988
     elif region in ['2', '6', '10', '14', '18']:
         low = 988
