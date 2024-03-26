@@ -57,7 +57,7 @@ def whole_year_plot(dd_ds, radio_x_axis, radio_groupby, y_var, resolution):
             case 'Minutes':
                 df['Numeric Time'] = df['Hour'] + df['Minute'] / 60
 
-        fig = px.scatter(df, x=df['Numeric Time'], y=y_var, color=radio_groupby, opacity=0.8, trendline='lowess',
+        fig = px.scatter(df, x=df['Numeric Time'], y=y_var, color=radio_groupby, opacity=0.5, trendline='lowess',
                          hover_data={'Year': True, 'Month': True, 'Day': True, 'Hour': True})
         fig.update_layout(title='{} over Time with {} resolution'.format(y_var,resolution), xaxis_title='Hours',
                           yaxis_title='Average {} Value'.format(y_var))
@@ -74,7 +74,8 @@ def whole_year_plot(dd_ds, radio_x_axis, radio_groupby, y_var, resolution):
         resolution_x = resolution_mapping(resolution)
         df.set_index('Date', inplace=True)
         df_filtered = df[[y_var, 'Year', 'Month', 'Week', 'Day', 'Hour', 'Minute']]
-        df_resampled = df_filtered.resample(resolution_x).mean().reset_index()
+        df_resampled = df_filtered.resample(resolution_x).median().reset_index()
+        df_resampled.dropna(inplace=True)
         fig = px.scatter(df_resampled, x='Date', y=y_var, color=radio_groupby, opacity=0.8, trendline='lowess',
                          hover_data={'Year': True, 'Month': True, 'Week': True, 'Day': True, 'Hour': True})
         fig.update_layout(title='{} over Time with {} resolution'.format(y_var,resolution), xaxis_title='Linear', yaxis_title='Average {} Value'.format(y_var))
