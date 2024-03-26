@@ -21,6 +21,8 @@ def cluster_occurrence_bar(which_cluster, cluster_x_axis, cluster_hue_b):
      clustering_rep, clustering_mode, dim_red_mode, clustering_filter,
      acoustic_region) = load_config()
 
+    # Todo: Make this code efficient
+
     csv = f'{clustering_rep}_{clustering_mode}_{dim_red_mode}_{clustering_filter}_{acoustic_region}.csv'
     result_file_path = os.path.join(os.path.dirname(path_data), "exp", last_dataset, csv)
     cluster_title = f'{clustering_mode} labels'
@@ -63,18 +65,27 @@ def cluster_occurrence_bar(which_cluster, cluster_x_axis, cluster_hue_b):
     elif first_column and sec_column and first_column == sec_column:
         df_count = cluster_df.groupby([first_column]).size().reset_index(name='Count')
 
-
     if cluster_x_axis == 'Linear cycle':
         cluster_df.set_index('Date', inplace=True)
         df_count = cluster_df.groupby(cluster_df.index.date).size().reset_index(name='Count')
         df_count.set_index('Date', inplace=True)
-        fig = px.bar(df_count, x=df_count.index, y='Count', color=df_count.index.year,
-                         labels={'Count of cluster occurrences': f'Occurrences of Cluster {which_cluster}'},
-                         title=f'Occurrences of Cluster {which_cluster} ')
+        if 'assigned_labels' in cluster_df:
+            fig = px.bar(df_count, x=df_count.index, y='Count', color=df_count.index.year,
+                         labels={'Count of cluster occurrences': f'Occurrences of Cluster {cluster_df["assigned_labels"].iloc[0]}'},
+                         title=f'Occurrences of Cluster {cluster_df["assigned_labels"].iloc[0]} ')
+        else:
+            fig = px.bar(df_count, x=df_count.index, y='Count', color=df_count.index.year,
+                             labels={'Count of cluster occurrences': f'Occurrences of Cluster {which_cluster}'},
+                             title=f'Occurrences of Cluster {which_cluster} ')
         return fig
 
-    fig = px.bar(df_count, x=sec_column, y='Count', color=first_column,
-                 labels=f'Occurrences of {cluster_df["assigned_labels"].iloc[0]}',
-                 title=f'Occurrences of Cluster {cluster_df["assigned_labels"].iloc[0]} ')
+    if 'assigned_labels' in cluster_df:
+        fig = px.bar(df_count, x=sec_column, y='Count', color=first_column,
+                     labels=f'Occurrences of {cluster_df["assigned_labels"].iloc[0]}',
+                     title=f'Occurrences of Cluster {cluster_df["assigned_labels"].iloc[0]} ')
+    else:
+        fig = px.bar(df_count, x=sec_column, y='Count', color=first_column,
+                     labels=f'Occurrences of {which_cluster}',
+                     title=f'Occurrences of Cluster {which_cluster} ')
 
     return fig
