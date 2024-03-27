@@ -47,7 +47,12 @@ def cluster_occurrence_multi(x_average):
             df_count = cluster_df.groupby([cluster_title, cluster_df.index.month]).size().reset_index(name='Count')
 
         if not df_count.empty:
-            fig.add_scatter(x=df_count.iloc[:, 1], y=df_count['Count'], name=f'Cluster {cluster}')
+            if 'assigned_labels' in df:
+                title = df[df[cluster_title] == int(cluster)]['assigned_labels'].iloc[0]
+                fig.add_scatter(x=df_count.iloc[:, 1], y=df_count['Count'], name=f'Cluster {title}')
+            else:
+                fig.add_scatter(x=df_count.iloc[:, 1], y=df_count['Count'], name=f'Cluster {cluster}')
+
 
     return fig
 
