@@ -14,9 +14,7 @@ import numpy as np
 from utils import load_config
 
 
-config = json.load(open('config.json', ))
-PATH_DATA = config["PATH_DATA"]
-PATH_EXP = os.path.join(os.path.dirname(PATH_DATA), 'exp')
+
 
 class ClusteringVisualizer:
     def __init__(self):
@@ -72,24 +70,24 @@ class ClusteringVisualizer:
     def clustering(self, acoustic_region, num_dim, indices, clusters_ideal, num_clusters, max_clusters):
 
         self.load_config()
-        self.csv_file_path = os.path.join(os.path.dirname(self.path_data), "exp", self.last_dataset,
+        self.csv_file_path = os.path.join(self.path_exp, self.last_dataset,
                                           f'{self.clustering_rep}.csv')
         if self.csv_file_path and os.path.exists(self.csv_file_path):
             self.data = pd.read_csv(self.csv_file_path, index_col=0)
         else:
             self.data = None
 
-        if self.clustering_filter == 'acoustic region':
-            # selected cols have per_bin indices (without date time info)
-            self.data, selected_cols = region_filter(self.data, acoustic_region)
-            scaled_df = self.scaler(self.data[selected_cols])
         # if self.clustering_filter == 'acoustic region':
-        #     self.data = region_filter_bp(self.data, acoustic_region)
-        #     per_bin_columns = [col for col in self.data.columns if 'per_bin' in col]
-        #     to_scale = self.data.drop(['Date'] + ['frequencies'] + ['LTS'] + per_bin_columns, axis=1).copy()
-        #     scaled_df = self.scaler(to_scale).dropna(axis=1)
-        #     scaled_df = scaled_df.set_index(self.data.index)
-        #     self.data = pd.concat([self.data['Date'], scaled_df], axis=1)
+        #     # selected cols have per_bin indices (without date time info)
+        #     self.data, selected_cols = region_filter(self.data, acoustic_region)
+        #     scaled_df = self.scaler(self.data[selected_cols])
+        if self.clustering_filter == 'acoustic region':
+            self.data = region_filter_bp(self.data, acoustic_region)
+            per_bin_columns = [col for col in self.data.columns if 'per_bin' in col]
+            to_scale = self.data.drop(['Date'] + ['frequencies'] + ['LTS'] + per_bin_columns, axis=1).copy()
+            scaled_df = self.scaler(to_scale).dropna(axis=1)
+            scaled_df = scaled_df.set_index(self.data.index)
+            self.data = pd.concat([self.data['Date'], scaled_df], axis=1)
         else:
             per_bin_columns = [col for col in self.data.columns if 'per_bin' in col]
             to_scale = self.data.drop(['Date'] + ['frequencies'] + ['LTS'] + per_bin_columns, axis=1).copy()
@@ -127,7 +125,7 @@ class ClusteringVisualizer:
         markers = ['o', 's', 'D', '^', 'v', '<', '>', 'p', 'H', 'X', '*', '+']
 
         results_csv = f'{self.clustering_rep}_{self.clustering_mode}_{self.dim_red_mode}_{self.clustering_filter}_{self.acoustic_region}.csv'
-        self.data.to_csv(os.path.join(os.path.dirname(PATH_DATA), "exp", self.last_dataset, results_csv))
+        self.data.to_csv(os.path.join(self.path_exp, self.last_dataset, results_csv))
 
         fig = px.scatter_3d(
                 self.data,  # Filter data for optimal clusters
