@@ -220,7 +220,6 @@ class FrontEndLite:
                                                                'Acoustic Region 13', 'Acoustic Region 14', 'Acoustic Region 15', 'Acoustic Region 16',
                                                                'Acoustic Region 17', 'Acoustic Region 18', 'Acoustic Region 19', 'Acoustic Region 20'],
                                                               label="Choose any acoustic region.")
-                                clustering_filter.change(self.acoustic_region_display, inputs=clustering_filter, outputs=acoustic_region)
                                 with gr.Row():
                                     clusters_ideal = gr.Radio(['Choose the number of clusters', 'Get optimum number of clusters'], label="How to chose number of clusters", interactive=True,
                                                               visible=True)
@@ -230,7 +229,7 @@ class FrontEndLite:
                                 chosen_indices = gr.CheckboxGroup(['ACI', 'Ht', 'EVNtCount', 'ECV', 'EAS', 'LFC', 'HFC', 'MFC', 'Hf', 'ADI', 'AGI', 'BI'], label= 'Choose the parameters for clustering',
                                                                    visible=False)
                                 num_dimensions = gr.Slider(minimum=1, maximum=10, value=2, step=1,
-                                                          label="Select the number of dimensions for PCA", interactive=True, visible=False)
+                                                          label="Select the number of dimensions for selected DR method", interactive=True, visible=False)
                             with gr.Column():
                                 cluster_playback = gr.Dropdown(choices=[], label="Choose any cluster to play back audios.", interactive=True, allow_custom_value=True)
                                 retrieve_clusters = gr.Button("Get cluster audios")
@@ -244,7 +243,7 @@ class FrontEndLite:
 
                         btn_clusters =gr.Button('Plot Clusters', interactive=True)
                         with gr.Row():
-                            clusters_pic = gr.Plot(label="Clusters based on k-means")
+                            clusters_pic = gr.Plot(label="Clusters based on chosen method")
                             sil_score = gr.Plot(label="Best number of clusters based on Silhouette Scores", visible=False)
 
                     # with gr.Accordion('Hierarchical Clustering', open=False):
@@ -325,6 +324,7 @@ class FrontEndLite:
 
             # For clustering
             clustering_mode.change(fn=update_clustering_mode, inputs=[clustering_mode])
+            clustering_filter.change(self.acoustic_region_display, inputs=clustering_filter, outputs=acoustic_region)
             clusters_ideal.change(fn=self.ideal_clustering, inputs=clusters_ideal,
                                   outputs=[num_clusters, sil_score, max_clusters])
             clustering_rep.change(fn=update_clustering_rep, inputs=[clustering_rep])
