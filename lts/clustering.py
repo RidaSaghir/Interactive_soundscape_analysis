@@ -77,21 +77,31 @@ class ClusteringVisualizer:
         else:
             self.data = None
 
+
         # if self.clustering_filter == 'acoustic region':
         #     # selected cols have per_bin indices (without date time info)
         #     self.data, selected_cols = region_filter(self.data, acoustic_region)
         #     scaled_df = self.scaler(self.data[selected_cols])
-        if self.clustering_filter == 'acoustic region':
-            self.data = region_filter_bp(self.data, acoustic_region)
-            per_bin_columns = [col for col in self.data.columns if 'per_bin' in col]
-            to_scale = self.data.drop(['Date'] + ['frequencies'] + ['LTS'] + per_bin_columns, axis=1).copy()
-            scaled_df = self.scaler(to_scale).dropna(axis=1)
-            scaled_df = scaled_df.set_index(self.data.index)
-            self.data = pd.concat([self.data['Date'], scaled_df], axis=1)
-        else:
-            per_bin_columns = [col for col in self.data.columns if 'per_bin' in col]
-            to_scale = self.data.drop(['Date'] + ['frequencies'] + ['LTS'] + per_bin_columns, axis=1).copy()
-            scaled_df = self.scaler(to_scale).dropna(axis=1)
+        #
+
+        if self.clustering_rep == 'acoustic_indices':
+
+            if self.clustering_filter == 'acoustic region':
+                self.data = region_filter_bp(self.data, acoustic_region)
+                per_bin_columns = [col for col in self.data.columns if 'per_bin' in col]
+                to_scale = self.data.drop(['Date'] + ['frequencies'] + ['LTS'] + per_bin_columns, axis=1).copy()
+                scaled_df = self.scaler(to_scale).dropna(axis=1)
+                scaled_df = scaled_df.set_index(self.data.index)
+                self.data = pd.concat([self.data['Date'], scaled_df], axis=1)
+            else:
+                per_bin_columns = [col for col in self.data.columns if 'per_bin' in col]
+                to_scale = self.data.drop(['Date'] + ['frequencies'] + ['LTS'] + per_bin_columns, axis=1).copy()
+                scaled_df = self.scaler(to_scale).dropna(axis=1)
+                scaled_df = scaled_df.set_index(self.data.index)
+                self.data = pd.concat([self.data['Date'], scaled_df], axis=1)
+
+        elif self.clustering_rep == 'vae':
+            scaled_df = self.scaler(self.data)
             scaled_df = scaled_df.set_index(self.data.index)
             self.data = pd.concat([self.data['Date'], scaled_df], axis=1)
 
