@@ -1,8 +1,7 @@
 import os
 
 import librosa
-from scipy.signal import butter, filtfilt
-import numpy as np
+from scipy.signal import butter, lfilter
 import soundfile as sf
 
 
@@ -15,7 +14,7 @@ def butter_bandpass(lowcut, highcut, fs, order=5):
 
 def butter_bandpass_filter(data, lowcut, highcut, fs, order):
     b, a = butter_bandpass(lowcut, highcut, fs, order=order)
-    y = filtfilt(b, a, data)
+    y = lfilter(b, a, data)
     return y
 
 
@@ -26,7 +25,7 @@ def filtered_audio(files, region):
     region = (region.split()[2])
 
     if region in ['1', '5', '9', '13', '17']:
-        low = 0.01
+        low = 50
         high = 988
     elif region in ['2', '6', '10', '14', '18']:
         low = 988
