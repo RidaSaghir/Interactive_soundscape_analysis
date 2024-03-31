@@ -101,9 +101,9 @@ class ClusteringVisualizer:
                 self.data = pd.concat([self.data['Date'], scaled_df], axis=1)
 
         elif self.clustering_rep == 'vae':
-            scaled_df = self.scaler(self.data)
-            scaled_df = scaled_df.set_index(self.data.index)
-            self.data = pd.concat([self.data['Date'], scaled_df], axis=1)
+            scaled_df = self.data.drop(['Date'], axis=1).copy()
+            scaled_df = self.scaler(scaled_df)
+            #self.data = pd.concat([self.data['Date'], scaled_df], axis=1)
 
 
         # Clustering Methods
