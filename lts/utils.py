@@ -22,15 +22,16 @@ def load_config():
     last_dataset = config["last_dataset"]
     path_exp = os.path.join(os.path.dirname(path_data), 'exp')
     clustering_rep = config["clustering_rep"]
+    resolution = config["resolution"]
     clustering_mode = config["clustering_mode"]
     dim_red_mode = config["dim_red_mode"]
     clustering_filter = config["clustering_filter"]
     acoustic_region = config["acoustic_region"]
-    return (config, path_data, last_dataset, path_exp, clustering_rep,
+    return (config, path_data, last_dataset, path_exp, clustering_rep, resolution,
             clustering_mode, dim_red_mode, clustering_filter, acoustic_region)
 
 def list_datasets():
-    _, PATH_DATA, last_dataset, _, _, _, _, _, _ = load_config()
+    _, PATH_DATA, last_dataset, _, _, _, _, _, _, _ = load_config()
     ds_choices = [i for i in os.listdir(PATH_DATA) if os.path.isdir(os.path.join(PATH_DATA, i))]
     ds_value = last_dataset
     ds_value = ds_value if ds_value in ds_choices else None
@@ -77,7 +78,7 @@ def update_region(region):
         json.dump(config, f)
 
 def summarise_dataset(dataset):
-    config, PATH_DATA, last_dataset, PATH_EXP, _, _, _, _, _ = load_config()
+    config, PATH_DATA, last_dataset, PATH_EXP, _, resolution, _, _, _, _ = load_config()
     # TODO Find out why it takes so long (>10s) to run this bit. Make it faster.
     list_wav = glob.glob(os.path.join(PATH_DATA, dataset, '**', '*.wav'), recursive=True)
     is_computed = os.path.isfile(os.path.join(PATH_EXP, dataset, 'acoustic_indices.csv'))
@@ -91,12 +92,12 @@ def summarise_dataset(dataset):
     return m
 
 def compute_indices(dataset, btn_compute):
-    config, PATH_DATA, last_dataset, PATH_EXP, _, _, _, _, _ = load_config()
+    #Todo: To compute indices based on different resolutions
+    config, PATH_DATA, last_dataset, PATH_EXP, _, resolution, _, _, _, _ = load_config()
     list_wav = glob.glob(os.path.join(PATH_DATA, dataset, '**', '*.wav'), recursive=True)
-    is_computed = os.path.isfile(os.path.join(PATH_EXP, dataset, 'acoustic_indices.csv'))
+    is_computed = os.path.isfile(os.path.join(PATH_EXP, dataset, f'acoustic_indices_{resolution}.csv'))
 
     if not is_computed or btn_compute == 'Recompute indices?':
-        # TODO In case is_computed is True, ask whether to recompute
         logger.info('Computing indices...')
         t_start = time.perf_counter()
         with Pool() as pool:
@@ -115,13 +116,13 @@ def compute_indices(dataset, btn_compute):
             df_indices_date = parse_date(df_indices)
             logger.info(f'Creating and saving CSV files')
             os.makedirs(os.path.join(PATH_EXP, dataset), exist_ok=True)
-            df_indices_date.to_csv(os.path.join(PATH_EXP, dataset, 'acoustic_indices.csv'))
+            #TODO: Do not hard code the name. Should vary with resolution
+            df_indices_date.to_csv(os.path.join(PATH_EXP, dataset, 'acoustic_indices_1min.csv'))
             logger.info('Done')
             message = f'Results saved to csv.'
         else:
             logger.warning("No valid results to save.")
             message = f'No valid results to save.'
-            # Optionally, handle the case where no valid results are obtained.
 
         if corrupt_audio_paths:
             message = f'Following files can not be processed: {corrupt_audio_paths}. Rest of the results are saved to csv. '
@@ -145,6 +146,16 @@ def _compute_indices(audio_path):
     except Exception as e:
         logger.error(f"Error processing {audio_path}: {e}")
     return None
+
+
+def _compute_indices_without_wav(s, fs):
+    temporal_indices = maad.features.all_temporal_alpha_indices(s, fs)
+    Sxx_power, tn, fn, ext = maad.sound.spectrogram(s, fs)
+    spectral_indices, per_bin_indices = maad.features.all_spectral_alpha_indices(Sxx_power, tn, fn)
+    temp_spec = temporal_indices.join(spectral_indices)
+    all_indices = temp_spec.join(per_bin_indices)
+    return all_indices
+
 
 
 
