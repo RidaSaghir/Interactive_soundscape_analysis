@@ -23,7 +23,7 @@ class ClusteringVisualizer:
 
     def load_config(self):
         (self.config, self.path_data, self.last_dataset, self.path_exp,
-         self.clustering_rep, self.clustering_mode, self.dim_red_mode, self.clustering_filter, self.acoustic_region) = load_config()
+         self.clustering_rep, self.resolution, self.clustering_mode, self.dim_red_mode, self.clustering_filter, self.acoustic_region) = load_config()
 
     def find_optimal_clusters(self, data, max_clusters):
         max_k = int(max_clusters)
@@ -67,38 +67,31 @@ class ClusteringVisualizer:
 
 
 
-    def clustering(self, acoustic_region, num_dim, indices, clusters_ideal, num_clusters, max_clusters):
+    def clustering(self, num_dim, indices, clusters_ideal, num_clusters, max_clusters):
 
         self.load_config()
         self.csv_file_path = os.path.join(self.path_exp, self.last_dataset,
-                                          f'{self.clustering_rep}.csv')
+                                          f'{self.clustering_rep}_{self.resolution}.csv')
         if self.csv_file_path and os.path.exists(self.csv_file_path):
             self.data = pd.read_csv(self.csv_file_path, index_col=0)
         else:
             self.data = None
 
-
-        # if self.clustering_filter == 'acoustic region':
-        #     # selected cols have per_bin indices (without date time info)
-        #     self.data, selected_cols = region_filter(self.data, acoustic_region)
-        #     scaled_df = self.scaler(self.data[selected_cols])
-        #
-
         if self.clustering_rep == 'acoustic_indices':
-
+            # Todo: Fix acoustic region without saving wav files
             if self.clustering_filter == 'acoustic region':
-                self.data = region_filter_bp(self.data, acoustic_region)
+                self.data = region_filter_bp(self.data, self.acoustic_region)
                 per_bin_columns = [col for col in self.data.columns if 'per_bin' in col]
                 to_scale = self.data.drop(['Date'] + ['frequencies'] + ['LTS'] + per_bin_columns, axis=1).copy()
                 scaled_df = self.scaler(to_scale).dropna(axis=1)
                 scaled_df = scaled_df.set_index(self.data.index)
-                self.data = pd.concat([self.data['Date'], scaled_df], axis=1)
+                self.data = pd.concat([self.data['Date Time'], self.data['File Name'], scaled_df], axis=1)
             else:
                 per_bin_columns = [col for col in self.data.columns if 'per_bin' in col]
-                to_scale = self.data.drop(['Date'] + ['frequencies'] + ['LTS'] + per_bin_columns, axis=1).copy()
+                to_scale = self.data.drop(['Date Time', 'File Name', 'frequencies', 'LTS'] + per_bin_columns, axis=1).copy()
                 scaled_df = self.scaler(to_scale).dropna(axis=1)
                 scaled_df = scaled_df.set_index(self.data.index)
-                self.data = pd.concat([self.data['Date'], scaled_df], axis=1)
+                self.data = pd.concat([self.data['Date Time'], self.data['File Name'], scaled_df], axis=1)
 
         elif self.clustering_rep == 'vae':
             scaled_df = self.data.drop(['Date'], axis=1).copy()
