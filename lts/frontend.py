@@ -68,7 +68,7 @@ class FrontEndLite:
             return gr.Dropdown(visible=False)
 
     def num_dimension_components(self, selected_option):
-        if selected_option in ['pca', 'tsne']:
+        if selected_option in ['pca', 'tsne', 'umap', 'isomap']:
             return gr.Slider(visible=True), gr.Radio(visible=False)
         elif selected_option == 'none':
             return gr.Slider(visible=False), gr.Radio(visible=True)
@@ -229,11 +229,11 @@ class FrontEndLite:
                                     clusters_ideal = gr.Radio(['Choose the number of clusters', 'Get optimum number of clusters'], label="How to chose number of clusters", interactive=True,
                                                               visible=True)
                                     max_clusters = gr.Textbox(label='Enter the maximum number of clusters to find optimum number of clusters from.', visible=False)
-                                num_clusters = gr.Slider(minimum=1, maximum=10, value=2, step=1,
+                                num_clusters = gr.Slider(minimum=2, maximum=10, value=2, step=1,
                                                           label="Select the number of clusters", interactive=True, visible=True)
                                 chosen_indices = gr.CheckboxGroup(['ACI', 'Ht', 'EVNtCount', 'ECV', 'EAS', 'LFC', 'HFC', 'MFC', 'Hf', 'ADI', 'BI'], label= 'Choose the parameters for clustering',
                                                                    visible=False)
-                                num_dimensions = gr.Slider(minimum=1, maximum=10, value=2, step=1,
+                                num_dimensions = gr.Slider(minimum=3, maximum=10, value=3, step=1,
                                                           label="Select the number of dimensions for selected DR method", interactive=True, visible=False)
                             with gr.Column():
                                 cluster_playback = gr.Dropdown(choices=[], label="Choose any cluster to play back audios.", interactive=True, allow_custom_value=True)
