@@ -4,19 +4,15 @@ import ast
 import calendar
 import os
 import json
+from utils import load_config
 
 
-config = json.load(open('config.json'))
 
-path_data = config["PATH_DATA"]
-last_dataset = config["last_dataset"]
-clustering_rep = config["clustering_rep"]
-
-def whole_year_plot(dd_ds, radio_x_axis, radio_groupby, y_var, resolution):
-    csv_file_path = os.path.join(os.path.dirname(path_data), "exp", last_dataset, f'{clustering_rep}.csv')
+def whole_year_plot(radio_x_axis, radio_groupby, y_var, resolution):
+    _, path_data, last_dataset, path_exp, clustering_rep, resolution_feature, _, _, _, _ = load_config()
+    csv_file_path = os.path.join(path_exp, last_dataset, f'{clustering_rep}_{resolution_feature}.csv')
     df = pd.read_csv(csv_file_path)
-
-    df['Date'] = pd.to_datetime(df['Date'])
+    df['Date'] = pd.to_datetime(df['Date Time'])
 
     # Access individual details
     df['Year'] = df['Date'].dt.year
