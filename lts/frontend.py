@@ -99,11 +99,16 @@ class FrontEndLite:
         cluster_title = f'{self.clustering_mode} labels'
         filtered_df = df[df[cluster_title] == cluster_number]
         files = []
+        for row in filtered_df['File Names']:
+            files.append(os.path.join(os.path.dirname(self.path_data), "data", self.last_dataset, row))
         for file in filtered_df.index:
             files.append(os.path.join(os.path.dirname(self.path_data), "data", self.last_dataset, file))
         output_files = random.sample(files, min(5, len(files)))
+        # Bandpass filtering
         if self.acoustic_region != 'none':
             output_files = filtered_audio(output_files, self.acoustic_region)
+        # Time filtering
+
 
         return (gr.Audio(value=output_files[0], visible=True), gr.Audio(value=output_files[1], visible=True),
                 gr.Audio(value=output_files[2], visible=True), gr.Audio(value=output_files[3], visible=True),
@@ -201,7 +206,7 @@ class FrontEndLite:
                         with gr.Row():
                             with gr.Column():
                                 clustering_mode = gr.Radio([('K-Means', 'k_means'),
-                                                   ('HDBSCAN', 'hdbscan'), ('DBSCAN', 'dbscan'), ('affinity', 'affinity')],
+                                                   ('HDBSCAN', 'hdbscan'), ('DBSCAN', 'dbscan'), ('affinity', 'affinity'), ('spectral', 'spectral')],
                                                    label="What clustering mode to use?")
                                 clustering_rep = gr.Radio([('Acoustic Indices', 'acoustic_indices'),
                                                    ('VAE Encodings', 'vae')],
@@ -210,7 +215,7 @@ class FrontEndLite:
                                                    ('None', 'none')],
                                                    label="What filters to use?")
                                 dim_red = gr.Radio([('PCA', 'pca'),
-                                                   ('t-SNE', 'tsne'), ('UMAP', 'umap'), ('None', 'none')],
+                                                   ('t-SNE', 'tsne'), ('UMAP', 'umap'), ('Isomap', 'isomap'), ('None', 'none')],
                                                    label="What dimensionality reduction technique to use?")
 
                             with gr.Column():
@@ -226,24 +231,25 @@ class FrontEndLite:
                                     max_clusters = gr.Textbox(label='Enter the maximum number of clusters to find optimum number of clusters from.', visible=False)
                                 num_clusters = gr.Slider(minimum=1, maximum=10, value=2, step=1,
                                                           label="Select the number of clusters", interactive=True, visible=True)
-                                chosen_indices = gr.CheckboxGroup(['ACI', 'Ht', 'EVNtCount', 'ECV', 'EAS', 'LFC', 'HFC', 'MFC', 'Hf', 'ADI', 'AGI', 'BI'], label= 'Choose the parameters for clustering',
+                                chosen_indices = gr.CheckboxGroup(['ACI', 'Ht', 'EVNtCount', 'ECV', 'EAS', 'LFC', 'HFC', 'MFC', 'Hf', 'ADI', 'BI'], label= 'Choose the parameters for clustering',
                                                                    visible=False)
                                 num_dimensions = gr.Slider(minimum=1, maximum=10, value=2, step=1,
                                                           label="Select the number of dimensions for selected DR method", interactive=True, visible=False)
                             with gr.Column():
                                 cluster_playback = gr.Dropdown(choices=[], label="Choose any cluster to play back audios.", interactive=True, allow_custom_value=True)
                                 retrieve_clusters = gr.Button("Get cluster audios")
-                                playback_audio_1 = gr.Audio(label="Audio 1",visible= False)
-                                playback_audio_2 = gr.Audio(label="Audio 2",visible= False)
-                                playback_audio_3 = gr.Audio(label="Audio 3",visible= False)
-                                playback_audio_4 = gr.Audio(label="Audio 4",visible= False)
-                                playback_audio_5 = gr.Audio(label="Audio 5",visible= False)
-                                cluster_label = gr.Textbox(label="Assign label to cluster")
-                                submit_label = gr.Button("Submit cluster label")
 
                         btn_clusters =gr.Button('Plot Clusters', interactive=True)
                         with gr.Row():
                             clusters_pic = gr.Plot(label="Clusters based on chosen method")
+                            with gr.Column():
+                                playback_audio_1 = gr.Audio(label="Audio 1", visible=False)
+                                playback_audio_2 = gr.Audio(label="Audio 2", visible=False)
+                                playback_audio_3 = gr.Audio(label="Audio 3", visible=False)
+                                playback_audio_4 = gr.Audio(label="Audio 4", visible=False)
+                                playback_audio_5 = gr.Audio(label="Audio 5", visible=False)
+                                cluster_label = gr.Textbox(label="Assign label to cluster")
+                                submit_label = gr.Button("Submit cluster label")
                             sil_score = gr.Plot(label="Best number of clusters based on Silhouette Scores", visible=False)
 
                     # with gr.Accordion('Hierarchical Clustering', open=False):
@@ -318,7 +324,7 @@ class FrontEndLite:
 
             # For time series plot
             radio_x_axis.change(self.note_msg, inputs=radio_x_axis, outputs=note)
-            btn_whole_plot.click(whole_year_plot, inputs=[dd_ds, radio_x_axis, radio_groupby, index_select, resolution],
+            btn_whole_plot.click(whole_year_plot, inputs=[radio_x_axis, radio_groupby, index_select, resolution],
                                  outputs=[whole_plot])
 
 
@@ -359,4 +365,4 @@ class FrontEndLite:
     def launch(self):
         if not hasattr(self, 'app'):
             self._build_app()
-        self.app.launch(server_name=self.server_name, server_port=self.server_port)
+        self.app.launch(server_name=self.server_name, server_port=self.server_port, share=True)
