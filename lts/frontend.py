@@ -4,12 +4,12 @@ import os
 import pandas as pd
 import gradio as gr
 import random
-from scipy.signal import butter, filtfilt
+import soundfile as sf
 
 from .utils import (compute_indices, summarise_dataset, list_datasets, update_last_dataset,
                     update_clustering_rep, update_clustering_mode, update_clustering_filter, update_dim_red, update_region)
 from graph_plotting import whole_year_plot
-from bandpass_audio_retrieval import filtered_audio
+from bandpass_audio_retrieval import filter_audio
 from clustering import ClusteringVisualizer
 from hierar_clustering import hierarchical_clustering
 from multiple_cluster_occur import cluster_occurrence_multi
@@ -38,6 +38,7 @@ class FrontEndLite:
         self.last_dataset = self.config["last_dataset"]
         self.path_exp = os.path.join(os.path.dirname(self.path_data), 'exp')
         self.clustering_rep = self.config["clustering_rep"]
+        self.resolution_features = self.config["resolution"]
         self.clustering_mode = self.config["clustering_mode"]
         self.dim_red_mode = self.config["dim_red_mode"]
         self.clustering_filter = self.config["clustering_filter"]
@@ -81,8 +82,8 @@ class FrontEndLite:
 
     def get_clusters(self):
         self.load_config()
-        csv = f'{self.clustering_rep}_{self.clustering_mode}_{self.dim_red_mode}_{self.clustering_filter}_{self.acoustic_region}.csv'
-        self.audio_file_path = os.path.join(os.path.dirname(self.path_data), "exp", self.last_dataset, csv)
+        csv = f'{self.clustering_rep}_{self.resolution_features}_{self.clustering_mode}_{self.dim_red_mode}_{self.clustering_filter}_{self.acoustic_region}.csv'
+        self.audio_file_path = os.path.join(self.path_exp, self.last_dataset, csv)
         if os.path.exists(self.audio_file_path):
             df = pd.read_csv(self.audio_file_path)
             column = f'{self.clustering_mode} labels'
@@ -99,16 +100,18 @@ class FrontEndLite:
         cluster_title = f'{self.clustering_mode} labels'
         filtered_df = df[df[cluster_title] == cluster_number]
         files = []
-        for row in filtered_df['File Names']:
-            files.append(os.path.join(os.path.dirname(self.path_data), "data", self.last_dataset, row))
-        for file in filtered_df.index:
-            files.append(os.path.join(os.path.dirname(self.path_data), "data", self.last_dataset, file))
+        for row in filtered_df['File Name']:
+            files.append(os.path.join(self.path_data, self.last_dataset, row))
         output_files = random.sample(files, min(5, len(files)))
         # Bandpass filtering
         if self.acoustic_region != 'none':
-            output_files = filtered_audio(output_files, self.acoustic_region)
-        # Time filtering
-
+            output_files = filter_audio(output_files, self.acoustic_region)
+            wav_file_paths = []
+            for i, (y, sr) in enumerate(output_files):
+                file_path = f"filtered_output_{i}.wav"
+                sf.write(file_path, y, sr)
+                wav_file_paths.append(file_path)
+            output_files = wav_file_paths
 
         return (gr.Audio(value=output_files[0], visible=True), gr.Audio(value=output_files[1], visible=True),
                 gr.Audio(value=output_files[2], visible=True), gr.Audio(value=output_files[3], visible=True),
@@ -340,7 +343,7 @@ class FrontEndLite:
             acoustic_region.change(fn=update_region, inputs=[acoustic_region])
             dim_red.change(fn=self.num_dimension_components, inputs=dim_red, outputs=[num_dimensions, chosen_indices])
             btn_clusters.click(clustering.clustering,
-                               [acoustic_region, num_dimensions, chosen_indices, clusters_ideal, num_clusters,
+                               [num_dimensions, chosen_indices, clusters_ideal, num_clusters,
                                 max_clusters],
                                outputs=[clusters_pic, sil_score,])
             retrieve_clusters.click(fn=self.get_clusters, outputs=[cluster_playback, which_cluster, which_cluster_r])
