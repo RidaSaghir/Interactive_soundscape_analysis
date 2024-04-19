@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import json
 from datetime import datetime
-from utils import load_config, _compute_indices, _compute_indices_without_wav
+from utils import load_config, _compute_indices
 from bandpass_audio_retrieval import filter_audio
 import glob
 from multiprocessing import Pool
@@ -56,7 +56,7 @@ def region_filter_bp(df):
         filtered_audios = filter_audio(files, acoustic_region)
         df_indices = pd.DataFrame()
         for audio in filtered_audios:
-            indices_df = _compute_indices_without_wav(audio)
+            indices_df = _compute_indices(audio)
             df_indices = pd.concat([df_indices, indices_df], axis=0)
         df_indices.index = filtered_df['File Name']
         df_indices_date = parse_date(df_indices)
