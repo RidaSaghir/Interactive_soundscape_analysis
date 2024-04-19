@@ -1,4 +1,5 @@
 import re
+import json
 from datetime import datetime
 from multiprocessing import Pool
 import pandas as pd
@@ -9,7 +10,7 @@ def parse_date(df):
     Parses the date and rearranges the data frame suitable for next operations
 
     Args:
-        df : Original data frame returned from MAAD scikit library for computing indices.
+        df : Original data frame returned from MAAD scikit library for computing indices with index as file names.
     Returns:
         df_with_dates : Data frame having additional column for 'Date Time' and 'File Name' with series index.
     """
@@ -36,3 +37,30 @@ def _parse_date(row):
     df_row = pd.DataFrame(series).transpose()
     df_row['File Name'] = df_row.index
     return df_row
+
+def parse_date_snippets(snippets):
+    """
+        Parses the date from audio snippets
+        Args:
+            snippets : a list of tuples having (file name, audio data, frame rate). The whole list of snippets would belong to a single file.
+        Returns:
+            results : a list of tuples having (timestamp, file name, audio data, frame rate)
+    """
+    config = json.load(open('config.json'))
+    resolution = config["resolution"]
+    result = re.search(r'\d+', resolution)
+    resolution = int(result.group())
+    date_time_pattern = r'(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})'
+    results = []
+    for i, snippet in enumerate(snippets):
+        file_name, s, fs = snippet
+        match = re.search(date_time_pattern, file_name)
+        if match:
+            year, month, day, hour, minute, second = match.groups()
+            second = int(second) + (i * resolution)
+            timestamp = datetime(int(year), int(month), int(day), int(hour), int(minute), int(second))
+        else:
+            timestamp = None
+        result = (timestamp, file_name, s, fs)
+        results.append(result)
+    return results
