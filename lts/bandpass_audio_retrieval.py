@@ -18,10 +18,18 @@ def butter_bandpass_filter(data, lowcut, highcut, fs, order):
     return y
 
 
-def filtered_audio(files, region):
+def filter_audio(files, region):
+    """
+    Bandpass filters the files based on selected region
+
+    Args:
+        files : List of file paths to be filtered.
+        region: Selected region like 'Acoustic Region 1'
+    Returns:
+        filtered_audios: Contains list of tuples of filtered audio and frame rate like (y, sr) for all the files
+    """
     region_dir = f'{region}'
     output_dir = os.path.join(os.path.dirname(files[0]), region_dir)
-
     region = (region.split()[2])
 
     if region in ['1', '5', '9', '13', '17']:
@@ -41,10 +49,7 @@ def filtered_audio(files, region):
     for file in files:
         y, sr = librosa.load(file, sr=None)
         filtered_audio = butter_bandpass_filter(y, low, high, sr, order=5)
-        os.makedirs(output_dir, exist_ok=True)
-        output_file = os.path.join(output_dir, os.path.basename(file))
-        sf.write(output_file, filtered_audio, sr)
-        filtered_audios.append(output_file)
+        filtered_audios.append((filtered_audio, sr))
 
     return filtered_audios
 
