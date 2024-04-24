@@ -35,7 +35,7 @@ def _parse_date(row):
 
         # Create a DataFrame with a single row from the modified Series
     df_row = pd.DataFrame(series).transpose()
-    df_row['File Name'] = df_row.index
+    #df_row['File Name'] = df_row.index
     return df_row
 
 def parse_date_snippets(snippets):
