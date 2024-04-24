@@ -5,7 +5,7 @@ import pandas as pd
 import gradio as gr
 import random
 import soundfile as sf
-
+import librosa
 from .utils import (compute_indices, summarise_dataset, list_datasets, update_last_dataset,
                     update_clustering_rep, update_clustering_mode, update_clustering_filter, update_dim_red, update_region)
 from graph_plotting import whole_year_plot
@@ -15,6 +15,7 @@ from hierar_clustering import hierarchical_clustering
 from multiple_cluster_occur import cluster_occurrence_multi
 from cluster_occur_bar import cluster_occurrence_bar
 from cluster_occur_rose import cluster_occurrence_rose
+from audio_file_trimmer import trimmer
 
 logger = logging.getLogger(__name__)
 
@@ -99,23 +100,30 @@ class FrontEndLite:
         cluster_number = int(chosen_cluster.split()[1])
         cluster_title = f'{self.clustering_mode} labels'
         filtered_df = df[df[cluster_title] == cluster_number]
-        files = []
-        for row in filtered_df['File Name']:
-            files.append(os.path.join(self.path_data, self.last_dataset, row))
-        output_files = random.sample(files, min(5, len(files)))
+        wav_file_paths = []
+        random_rows = filtered_df.sample(n=5)
+        for i, row in random_rows.iterrows():
+            if self.resolution_features != '60sec':
+                y, sr = trimmer(row, self.resolution_features)
+            else:
+                y, sr = librosa.load(os.path.join(self.path_data, self.last_dataset, row['File Name']))
+
+            file_path = f"filtered_output_{i}.wav"
+            sf.write(file_path, y, sr)
+            wav_file_paths.append(file_path)
+
         # Bandpass filtering
         if self.acoustic_region != 'none':
-            output_files = filter_audio(output_files, self.acoustic_region)
+            output_files = filter_audio(wav_file_paths, self.acoustic_region)
             wav_file_paths = []
             for i, (y, sr) in enumerate(output_files):
                 file_path = f"filtered_output_{i}.wav"
                 sf.write(file_path, y, sr)
                 wav_file_paths.append(file_path)
-            output_files = wav_file_paths
 
-        return (gr.Audio(value=output_files[0], visible=True), gr.Audio(value=output_files[1], visible=True),
-                gr.Audio(value=output_files[2], visible=True), gr.Audio(value=output_files[3], visible=True),
-                gr.Audio(value=output_files[4], visible=True))
+        return (gr.Audio(value=wav_file_paths[0], visible=True), gr.Audio(value=wav_file_paths[1], visible=True),
+                gr.Audio(value=wav_file_paths[2], visible=True), gr.Audio(value=wav_file_paths[3], visible=True),
+                gr.Audio(value=wav_file_paths[4], visible=True))
 
     def assign_label(self, chosen_cluster, cluster_label):
         df = pd.read_csv(self.audio_file_path, index_col=0)
