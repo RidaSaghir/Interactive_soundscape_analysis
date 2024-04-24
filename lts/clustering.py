@@ -80,9 +80,9 @@ class ClusteringVisualizer:
         if self.clustering_rep == 'acoustic_indices':
             # Todo: Fix acoustic region without saving wav files
             if self.clustering_filter == 'acoustic region':
-                self.data = region_filter_bp(self.data, self.acoustic_region)
+                self.data = region_filter_bp(self.data)
                 per_bin_columns = [col for col in self.data.columns if 'per_bin' in col]
-                to_scale = self.data.drop(['Date'] + ['frequencies'] + ['LTS'] + per_bin_columns, axis=1).copy()
+                to_scale = self.data.drop(['Date Time', 'File Name', 'frequencies', 'LTS'] + per_bin_columns, axis=1).copy()
                 scaled_df = self.scaler(to_scale).dropna(axis=1)
                 scaled_df = scaled_df.set_index(self.data.index)
                 self.data = pd.concat([self.data['Date Time'], self.data['File Name'], scaled_df], axis=1)
@@ -127,7 +127,7 @@ class ClusteringVisualizer:
         colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k', 'w', 'orange', 'purple', 'pink', 'lime', 'brown', 'gray', 'indigo']
         markers = ['o', 's', 'D', '^', 'v', '<', '>', 'p', 'H', 'X', '*', '+']
 
-        results_csv = f'{self.clustering_rep}_{self.clustering_mode}_{self.dim_red_mode}_{self.clustering_filter}_{self.acoustic_region}.csv'
+        results_csv = f'{self.clustering_rep}_{self.resolution}_{self.clustering_mode}_{self.dim_red_mode}_{self.clustering_filter}_{self.acoustic_region}.csv'
         self.data.to_csv(os.path.join(self.path_exp, self.last_dataset, results_csv))
 
         fig = px.scatter_3d(
