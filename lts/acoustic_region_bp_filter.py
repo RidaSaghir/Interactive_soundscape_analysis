@@ -57,39 +57,14 @@ def region_filter_bp(df):
             audio = trimmer(row, resolution)
             filtered_audio = filter_audio([audio], acoustic_region)
 
-            # Check if audio was filtered successfully
             if filtered_audio:
-                # Unpack audio data
-                s, fs = filtered_audio[0]  # Assuming filter_audio returns a list of tuples
+                s, fs = filtered_audio[0]
 
-                # Compute indices
                 audio = (time_stamp, os.path.basename(file_name), s, fs)
                 indices_df = _compute_indices(audio)
-
-                # Append computed indices to df_indices
                 df_indices = pd.concat([df_indices, indices_df], axis=0)
-        #     time_stamps.append(row['Date Time'])
-        #     file_names.append(os.path.join(path_data, last_dataset, row['File Name']))
-        # filtered_audios = filter_audio(file_names, acoustic_region)
-        # for file_name, time_stamp, audio_data in zip(file_names, time_stamps, filtered_audios):
-        #     s, fs = audio_data
-        #     audio = (time_stamp, os.path.basename(file_name), s, fs)
-        #     indices_df = _compute_indices(audio)
-        #     df_indices_date = pd.concat([df_indices, indices_df], axis=0)
 
-            # s, fs = filter_audio(file_name, acoustic_region)
-            # indices_df = _compute_indices(date_time, file_name, s, fs)
-            # df_indices_date = pd.concat([df_indices, indices_df], axis=0)
-        # for file in filtered_df['File Name']:
-        #     files.append(os.path.join(path_data, last_dataset, file))
-        #
-        # filtered_audios = filter_audio(files, acoustic_region)
-        # df_indices = pd.DataFrame()
-        # for audio in filtered_audios:
-        #     indices_df = _compute_indices(audio)
-        #     df_indices = pd.concat([df_indices, indices_df], axis=0)
-        #df_indices.index = filtered_df['File Name']
-        #df_indices_date = parse_date(df_indices)
+
         return df_indices
 
 
